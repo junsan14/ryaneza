@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Redirect;
 
 
 class BistroController extends Controller
@@ -30,6 +31,7 @@ class BistroController extends Controller
     {
         $id = $request->query('id');
         $bistro = Bistro::find([['id','=' , $id]])->first();
+
         return Inertia::render('Admin/CreateBistro', ['bistro'=>$bistro]);
         
     }
@@ -42,16 +44,14 @@ class BistroController extends Controller
         
     }
     public function store(Request $request): Response
-    {   
-           
-    
+    {  
         $now = Carbon::now();
         $time = $now->year."_".$now->month."_".$now->day."_".$now->hour.$now->minute.$now->second;
         $images = $request->file();
         $thumbnailPath = "";
-        $kvsPath = $request->kvs;
+        $kvsPath = $request->kvs_images;
         $pointsPath = $request->points;
-       
+        $menusPath = $request->menu_images;
         if(!empty($images)){
             foreach ($images as $key=>$image) {
                 if($key === "thumbnail"){
@@ -64,7 +64,7 @@ class BistroController extends Controller
                         $imageName = $time."_".$request->name."_".$key.".".$kv->getClientOriginalExtension();
                         $path = $kv->storeAs('images',$imageName, 'public');
                         $url = Storage::url($path);
-                                $kvsPath[$key] = $url ;
+                        $kvsPath[$key] = $url ;
                     }
               
                 }elseif($key === "points"){
@@ -79,6 +79,21 @@ class BistroController extends Controller
                                 $pointsPath[$i]['image'] = $url;
                             }
                         }  
+                    }
+                }
+                elseif($key === "menu_images"){
+                    //dd($key);
+                    foreach($image as $key=>$menu_image){          
+                    
+                        $imageName = $time."_".$request->name."_point".$key.".".$menu_image['image']->getClientOriginalExtension();
+                        $path = $menu_image['image']->storeAs('images',$imageName, 'public');
+                        $url = Storage::url($path);
+                        foreach($menusPath as $i=>$menuPath){
+                             //dd($menusPath);
+                            if($menuPath['id'] === 'menu_image'.($key+1) ){    
+                                $menusPath[$i]['image'] = $url;
+                            }
+                        } 
                     }
                 }
             }
@@ -102,11 +117,14 @@ class BistroController extends Controller
             'style' => $request->style,
             'speciality' => $request->speciality,
             'occasion' => $request->occasion,
+            'ambience' => $request->ambience,
             'time_occasion' => $request->time_occasion,
             'dietary_restriction' => $request->dietary_restriction,
             'thumbnail' => $thumbnailPath?$thumbnailPath:$request->thumbnail,
-            'kvs'=>$kvsPath,
+            'kvs_images'=>$kvsPath,
             'points'=>!empty($pointsPath)?$pointsPath:$request->points,
+            'menu_images'=>$menusPath,
+            'seats_number' => $request->seats_number,
             'min_price' => $request->min_price,
             'max_price' => $request->max_price,
             'payment_options' => $request->payment_options,
@@ -114,7 +132,13 @@ class BistroController extends Controller
             'keywords' => $request->keywords,
             
         ]);
-        return Inertia::render('Admin/CreateBistro', ['message'=>$request->name.' is created']);
+        if($request->is_edit){
+             return Inertia::render('Home', ['message'=>$request->name.' is editted']);
+             //return back()->with(['message'=>$request->name.' is editted']);
+        }else{
+             return Inertia::render('Home', ['message'=>$request->name.' is created']);
+        }
+       
        // return redirect('/')->with(['message'=>$request->name.' is created']);
         //return back()->with(['message'=>$request->name.' is created']);
         

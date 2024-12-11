@@ -10,38 +10,37 @@ import Layout from '@/Layouts/Layout';
 import { Head, Link, useForm, usePage,router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import KigaliInformation from './Shared/BistroForm/KigaliInfomation';
-import {BistroGenres, BistroSpecialities, BistroStyles, Time_occasions, Occasions,Dietary_restrictions, Payment_options, Reservation} from './Shared/BistroForm/Categories';
+import {BistroGenres, BistroSpecialities, BistroStyles, Time_occasions, Ambiences, Occasions,Dietary_restrictions, Payment_options, Reservation} from './Shared/BistroForm/Categories';
 import { CiCirclePlus } from "react-icons/ci";
 import { FaImage } from "react-icons/fa";
 
 
 
-
 export default function CreateBistro(){
 	const {bistro} = usePage().props;
-	const points =[];
 	const imagePreviewPoints ={
 		thumbnail:bistro?bistro.thumbnail:"",
-		kv1:bistro?bistro.kvs["kv1"]:"",
-		kv2:bistro?bistro.kvs["kv2"]:"",
-		kv3:bistro?bistro.kvs["kv3"]:"",
-		kv4:bistro?bistro.kvs["kv4"]:"",
-		kv5:bistro?bistro.kvs["kv5"]:"",
-	}
-	if(bistro){
-	    bistro.points.map((point,i)=>{
-	    	imagePreviewPoints[`point${i+1}_picture`] = bistro.points[i]["image"]
+		kv1:bistro?bistro.kvs_images["kv1"]:"",
+		kv2:bistro?bistro.kvs_images["kv2"]:"",
+		kv3:bistro?bistro.kvs_images["kv3"]:"",
+		kv4:bistro?bistro.kvs_images["kv4"]:"",
+		kv5:bistro?bistro.kvs_images["kv5"]:"",
 
+	}
+
+	if(bistro ){
+	    bistro.points && bistro.points.map((point,i)=>{
+	    	imagePreviewPoints[`point${i+1}_picture`] = bistro.points[i]["image"]
 	    })
-	    bistro.payment_options.map((option,i)=>{
-	    	Payment_options[option]["seen"] = true;
+	    bistro.menu_images && bistro.menu_images.map((menu_image,i)=>{
+	    	//console.log(menu_image)
+	    	imagePreviewPoints[`menu_image${i+1}_picture`] = menu_image["image"]
 	    })
 	}
 	
-	//const [payment_options, setPayment_options] = useState(Payment_options);
-	const payment_options = Payment_options;
 	const [imagePreview, setImagePreview] = useState(imagePreviewPoints);
 	const { data, setData, post, processing, errors, reset } = useForm({
+		id:bistro?bistro.id:"",
         name: bistro?bistro.name:'',
         description: bistro?bistro.description:'',
         province: bistro?bistro.province:0,
@@ -56,53 +55,65 @@ export default function CreateBistro(){
         style: bistro?bistro.style:0,
         speciality: bistro?bistro.speciality:0,
         occasion: bistro?bistro.occasion:0,
+        ambience:bistro?bistro.ambience:0,
         time_occasion: bistro?bistro.time_occasion:0,
-        dietary_restrictions: bistro?bistro.dietary_restrictions:0,
+        dietary_restriction: bistro?bistro.dietary_restriction:0,
         thumbnail:bistro?bistro.thumbnail: "storage/images/noimage.png",
-        kvs:{
-        	kv1:bistro?bistro.kvs["kv1"]:"",
-        	kv2:bistro?bistro.kvs["kv2"]:"",
-        	kv3:bistro?bistro.kvs["kv3"]:"",
-        	kv4:bistro?bistro.kvs["kv4"]:"",
-        	kv5:bistro?bistro.kvs["kv5"]:""
+        kvs_images:{
+        	kv1:bistro?bistro.kvs_images["kv1"]:"",
+        	kv2:bistro?bistro.kvs_images["kv2"]:"",
+        	kv3:bistro?bistro.kvs_images["kv3"]:"",
+        	kv4:bistro?bistro.kvs_images["kv4"]:"",
+        	kv5:bistro?bistro.kvs_images["kv5"]:""
         },
-        points:bistro?bistro.points:[],
-
+        points:bistro?bistro.points:[{ id: `point1`, image:"", remarks:""}],
+        menu_images:bistro?bistro.menu_images:[
+        	{id:"menu_image1", image:""}
+        	],
+        seats_number:bistro?bistro.seats_number:0,
         min_price:bistro?bistro.min_price:1000,
         max_price:bistro?bistro.max_price:2000,
-        payment_options:payment_options,
+        payment_options:bistro?bistro.payment_options:Payment_options,
         reservation:bistro?bistro.reservation:0,
         keywords:bistro?bistro.keywords:"",
+        is_edit:bistro?true:false,
 
     });
-  	console.log(payment_options)
-	useEffect(()=>{
-		const checkedIds = payment_options.filter((payment_option,i)=>payment_option.seen === true)
-		setData("payment_options", checkedIds);
-		console.log(checkedIds);
-		
-	},[payment_options])
+console.log(bistro)
     const handleChangeData = (e)=>{
         setData(e.target.id, e.target.value);
         
     }
-    const handleClickAddPoint = (e)=>{
+    const handleClickAddUploader = (e)=>{
     	e.preventDefault();
     	const pointsNum = data.points.length;
-    	
-    	setData("points",[
-    		...data.points,
-    		{ id: `point${pointsNum+1}`, image:"", remarks:""}
-    		])
-    	const propertyName = `point${pointsNum+1}_picture`
+    	const menuNum = data.menu_images.length;
+    	let propertyName;
+
+    	if(e.currentTarget.id.indexOf("point") > 0){
+    		setData("points",[
+	    		...data.points,
+	    		{ id: `point${pointsNum+1}`, image:"", remarks:""}
+	    	])
+	    	propertyName = `point${pointsNum+1}_picture`
+    	}else if(e.currentTarget.id.indexOf("menu") > 0){
+   
+    		setData("menu_images",[
+	    		...data.menu_images,
+	    		{id:`menu_image${menuNum+1}`, image:""}
+	    	])
+	    	propertyName = `menu_image${menuNum+1}`
+    	}
+
     	setImagePreview({
     		...imagePreview,
     		[propertyName]:""
     	})
+    	
     }
 	const handleImageChange = (e) => {
 		const key = e.target.id;
-
+		console.log(key);
 		//Set image to Preview 
         const reader = new FileReader()
           reader.onload = (e) => {
@@ -112,6 +123,7 @@ export default function CreateBistro(){
 	        }))
 		  }
 		  reader.readAsDataURL(event.target.files[0])
+
 		if(key === "thumbnail"){
 			setData(key,e.target.files[0]);
 		}else if(String(key).indexOf("kv") === 0){
@@ -121,7 +133,7 @@ export default function CreateBistro(){
 	    	})
 		}else if(String(key).indexOf("point") === 0){
 			const id = e.target.closest('.point').id;
-			console.log(id);
+
 			const nextPoints = data.points.map((point,i)=>{
 			   	if(point.id === id){
 			   		return {
@@ -135,6 +147,22 @@ export default function CreateBistro(){
 		   	setData("points",nextPoints)
 		   	console.log(data.points)
 		}
+		else if(String(key).indexOf("menu") === 0){
+			const id = e.target.closest('.menu').id;
+			console.log(id);
+			const nextMenu = data.menu_images.map((menu_image,i)=>{
+			   	if(menu_image.id === id){
+			   		return {
+			   			...menu_image,
+			   			image:e.target.files[0],
+			   		}
+			   	}else{
+			   		return {...menu_image}
+			   	}
+			   })
+		   	setData("menu_images",nextMenu)
+		   	console.log(data.menu_images)
+		}
 						
     };
     const handleClickDeletePreview = (e)=>{
@@ -146,23 +174,29 @@ export default function CreateBistro(){
 	            [key]: "",
 	     }))
     }
-	const handleTogglePaymentMethod = (methodid,nextSeen)=>{
+	const handleTogglePaymentMethod = (methodid,nextChecked)=>{
+		/*
+		data.payment_options.map((payment_option,i) => {
+			(payment_option.id === methodid )&&(Payment_options[i].checked = nextChecked);
 		
-		setData("payment_options",data.payment_options.map(payment_option => {
-			
-	      if (payment_option.id === methodid) {
-	        return { 
-	        	...data.payment_option, 
-	        	seen: nextSeen };
-	      } else {
-	        return data.payment_option;
-	      }
-	      console.log(data.payment_options);
-	    }))
+		})
+		*/
+		
+		//setData('payment_options', Payment_options);
+		setData('payment_options', data.payment_options.map((payment_option,i) => {
+			if(payment_option.id === methodid ){
+				return {
+					...payment_option,
+					checked : nextChecked
+				}
+			}else{
+				return {...payment_option}
+			}
+		}))
 	}
 	const handleChangeRemarks = (e) =>{
-		console.log(data)
 	   const key = e.target.closest('.point').id;
+	   console.log(key);
 	   	const nextPoints = data.points.map((point,i)=>{
 		   	if(point.id === key){
 		   		return {
@@ -178,7 +212,7 @@ export default function CreateBistro(){
 	}
     const submit = (e) => {
         e.preventDefault();
-         router.post(route('store.bistro'),data,{
+         router.post(route('bistro.store'),data,{
          	preserveState:false,
          });
     };
@@ -335,21 +369,6 @@ export default function CreateBistro(){
 		                    <InputError message={errors.style} />
 		                </div>
 		                <div className='input-area'>
-		                    <InputLabel htmlFor="speciality" value="Specialty" />
-		                    <TextSelect
-		                        id="speciality"
-		                        value={data.speciality}
-		                        onChange={handleChangeData}
-		                        autoComplete="speciality"
-		                        required
-		                    >
-		                    {BistroSpecialities.map((BistroSpeciality,i)=>(
-		                    	<option value={i} key={i}>{BistroSpeciality}</option>
-		                    	))}
-		                    </TextSelect>
-		                    <InputError message={errors.speciality} />
-		                </div>
-		                <div className='input-area'>
 		                    <InputLabel htmlFor="occasion" value="Occasion" />
 		                    <TextSelect
 		                        id="occasion"
@@ -360,6 +379,36 @@ export default function CreateBistro(){
 		                    >
 		                    {Occasions.map((occasion,i)=>(
 		                    	<option value={i} key={i}>{occasion}</option>
+		                    	))}
+		                    </TextSelect>
+		                    <InputError message={errors.speciality} />
+		                </div>
+		                <div className='input-area'>
+		                    <InputLabel htmlFor="ambience" value="Ambience" />
+		                    <TextSelect
+		                        id="ambience"
+		                        value={data.ambience}
+		                        onChange={handleChangeData}
+		                        autoComplete="ambience"
+		                        required
+		                    >
+		                    {Ambiences.map((ambience,i)=>(
+		                    	<option value={i} key={i}>{ambience}</option>
+		                    	))}
+		                    </TextSelect>
+		                    <InputError message={errors.speciality} />
+		                </div>
+		                <div className='input-area'>
+		                    <InputLabel htmlFor="speciality" value="Specialty Menu" />
+		                    <TextSelect
+		                        id="speciality"
+		                        value={data.speciality}
+		                        onChange={handleChangeData}
+		                        autoComplete="speciality"
+		                        required
+		                    >
+		                    {BistroSpecialities.map((BistroSpeciality,i)=>(
+		                    	<option value={i} key={i}>{BistroSpeciality}</option>
 		                    	))}
 		                    </TextSelect>
 		                    <InputError message={errors.speciality} />
@@ -556,23 +605,49 @@ export default function CreateBistro(){
 
 				                    <InputError message={errors.kv5} />
 				                </div>
-			                </div>
-			               
+			                </div>            
 		                </div>
 	
 			            <h2 className='section_title'>Points</h2>
-		              	<div className='image-wrap'>
-			                <Points data={data} imagePreview={imagePreview} 
-			                	    handleImageChange={handleImageChange} errors={errors} 
-			                	    handleChangeRemarks={handleChangeRemarks} handleClickDeletePreview={handleClickDeletePreview}
-			               	/>
-			               	<button onClick={handleClickAddPoint} className='add-point'>
-			               <CiCirclePlus />
-			            </button>
+			              	<div className='image-wrap'>
+			              	{(data.points) && 
+				                <PointsUploader data={data} imagePreview={imagePreview} 
+				                	    handleImageChange={handleImageChange} errors={errors} 
+				                	    handleChangeRemarks={handleChangeRemarks} handleClickDeletePreview={handleClickDeletePreview}
+				               	/>
+				             }
+				            <button onClick={handleClickAddUploader} className='add-uploader' id="add-point-uploader">
+				               <CiCirclePlus />
+				            </button>
+			            </div>
+			            <h2 className='section_title'>Menus</h2>
+			            <div className='image-wrap'>
+			              	{(data.menu_images) && 
+				                <MenuUploader data={data} imagePreview={imagePreview} 
+				                	    handleImageChange={handleImageChange} errors={errors} 
+				                	    handleChangeRemarks={handleChangeRemarks} handleClickDeletePreview={handleClickDeletePreview}
+				               	/>
+				             }
+				            <button onClick={handleClickAddUploader} className='add-uploader' id="add-menu-uploader">
+				               <CiCirclePlus />
+				            </button>
 			            </div>
 	                </section>
 	                <section className='section'>
 		                <h2 className='section_title'>Ohters</h2>
+		                <div className='input-area'>
+		                    <InputLabel htmlFor="seats_number" value="Seats Number" />
+		                    <TextInput 
+		                        id="seats_number"
+		                        type="number"
+		                        name="seats_number"
+		                        value={data.seats_number}
+		                        onChange={handleChangeData}
+		                        autoComplete="seats_number"
+		                        placeholder=''
+		                    />
+		                    <InputError message={errors.seats_number} />
+		                </div>
 		                <div className='input-area'>
 		                    <InputLabel htmlFor="min_price" value="Minumun Price" />
 		                    <TextInput 
@@ -603,12 +678,12 @@ export default function CreateBistro(){
 		                <div className='input-area'>
 		                    <InputLabel htmlFor="payment_option" value="Payment Option" />
 		                    <div className="input-area flex">
-		                        {payment_options.map((payment_option,i)=>(
+		                        {data.payment_options.map((payment_option,i)=>(
 		                        	<div className='checkbox-item' key={i}>
 		                        		<Checkbox type='checkbox'
 				                            id={payment_option.method.toLowerCase()}
 				                            name={payment_option.method.toLowerCase()}
-				                            checked={payment_option.seen}
+				                            checked={Boolean(Number(payment_option.checked))}
 				                            onChange={(e) =>{
 				                            	handleTogglePaymentMethod(payment_option.id,e.target.checked);
 				                            
@@ -650,7 +725,7 @@ export default function CreateBistro(){
 		                </div>
 	                </section>
 	                <PrimaryButton disabled={processing} form="form">
-	                    Create
+	                    {bistro?"Update":"Create"}
 	                </PrimaryButton>
 	            </form>
 
@@ -660,10 +735,10 @@ export default function CreateBistro(){
 }
 
 
-const Points = ({data,imagePreview,handleImageChange,errors, handleChangeRemarks,handleClickDeletePreview}) =>{
+const PointsUploader = ({data,imagePreview,handleImageChange,errors, handleChangeRemarks,handleClickDeletePreview}) =>{
 return(
 	data.points.map((point,i)=>(
-		<div className='input-area_image point' name={`point${i+1}`} id={`point${i+1}`}  >
+		<div className='input-area_image point' id={`point${i+1}`}>
 	        <div className='input-area_image-input'>
 	        	{imagePreview[`point${i+1}_picture`] && 
 	        	<button className='input-area_image-input_close' value={`point${i+1}_picture`} onClick={handleClickDeletePreview}></button>}
@@ -700,6 +775,39 @@ return(
 	        </div>
 	        	<InputError message={errors.point_picture} />
 				<InputError message={errors.point_remarks} />
+	    </div>
+
+		))
+	)
+}
+
+const MenuUploader = ({data,imagePreview,handleImageChange,errors, handleChangeRemarks,handleClickDeletePreview}) =>{
+return(
+	data.menu_images.map((menu_image,i)=>(
+		<div className='input-area_image menu' id={`menu_image${i+1}`} >
+	        <div className='input-area_image-input'>
+	        	{imagePreview[`menu_image${i+1}_picture`] && 
+	        	<button className='input-area_image-input_close' value={`menu_image${i+1}_picture`} onClick={handleClickDeletePreview}></button>}
+	            <p className='input-area_image-input_title'>{`menu${i+1}_picture`}</p>
+	            <InputLabel htmlFor={`menu_image${i+1}_picture`} className="input-area_image-input_uploader" value={!imagePreview[`menu_image${i+1}_picture`] && <FaImage />} />
+	            <div className='input-area_text'>
+	                <TextInputFile 
+	                    id={`menu_image${i+1}_picture`}
+	                    type="file"
+	                    name={`menu_image${i+1}_picture`}
+	                    onChange={handleImageChange}
+	                    autoComplete={`menu_image${i+1}_picture`}
+	                    placeholder=''
+	                 
+	                />               
+	            </div>
+	            {imagePreview &&
+	            <div className='input-area_image-input_preview'>
+	            	<img className='input-area_image-input_preview_img' src={imagePreview[`menu_image${i+1}_picture`]} alt="" />
+	            </div>
+	        	} 
+	        </div>
+	        	<InputError message={errors.menu_image} />
 	    </div>
 
 		))

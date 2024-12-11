@@ -1,5 +1,5 @@
 import GuestLayout from "@/Layouts/GuestLayout"
-import { usePage, Head } from "@inertiajs/react"
+import { usePage, Head,useForm, Link} from "@inertiajs/react"
 import bistro00 from '../../../img/bistro00.webp'
 import bistro01 from '../../../img/bistro01.png'
 
@@ -27,11 +27,28 @@ import { FaMapLocationDot,FaMoneyCheckDollar } from "react-icons/fa6";
 
 import { CiLocationOn } from "react-icons/ci";
 import { FaStore } from "react-icons/fa";
+import { CiEdit } from "react-icons/ci";
+import { MdOutlineDelete } from "react-icons/md";
+
 
 export default function Bistro(){
 	const {bistro} = usePage().props;
+	const {auth} = usePage().props;
 	const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalContent, setModalContent] = useState(false);
+    const checkedPaymentOptions = bistro.payment_options.filter(option=> option.checked == 1);
+    const {
+	        data,
+	        setData,
+	        delete: destroy,
+	        processing,
+	        reset,
+	        clearErrors,
+	        progress
+	    } = useForm({
+	        id:"",
+	});
+	console.log(bistro)
     const handleClickShowModal = (e)=>{
         setIsModalOpen(true);
         status = e.currentTarget.id;
@@ -42,7 +59,6 @@ export default function Bistro(){
         setIsModalOpen(false);
         document.body.style.overflow = "auto";
     }
-	console.log(bistro)
 	return(
 		<GuestLayout>
 			<Head title={bistro.name} />
@@ -53,35 +69,44 @@ export default function Bistro(){
 	            	{KigaliInformation["districts"][KigaliInformation["provinces"][bistro.province].toLowerCase()][bistro.district]}, 
 	            	{KigaliInformation["provinces"][bistro.province]}
 	            </p>
+	            {(auth.user && auth.user.admin) &&(
+	            <div className="bistro_btns">
+					<button className="bistro_btns_edit">
+						<Link href="/edit-bistro" data={{id:bistro.id}} >
+							<CiEdit />
+						</Link>
+					</button>
+					<button className="bistro_btns_delete">
+						<Link id={bistro.id} onClick={(e)=>handleClickDelete(e)} >
+							<MdOutlineDelete />
+						</Link>
+					</button>
+				</div>
+				)}
 	            <div className="kv">
 	            	<div className="kv_main">
-	            		<img src={bistro.kvs["kv1"]} alt="" className="kv_main_image"/>
+	            		<img src={bistro.kvs_images["kv1"]} alt="" className="kv_main_image"/>
 	            	</div>
 	            	<div className="kv_sub">
 	            					<div className="kv_sub_item">
-					            		<img src={bistro.kvs["kv2"]} alt="" className="kv_sub_item_image"/>
+					            		<img src={bistro.kvs_images["kv2"]} alt="" className="kv_sub_item_image"/>
 					            	</div>
 					            	<div className="kv_sub_item">
-					            		<img src={bistro.kvs["kv3"]} alt="" className="kv_sub_item_image"/>
+					            		<img src={bistro.kvs_images["kv3"]} alt="" className="kv_sub_item_image"/>
 					            	</div>
 					            	<div className="kv_sub_item">
-					            		<img src={bistro.kvs["kv4"]} alt="" className="kv_sub_item_image"/>
+					            		<img src={bistro.kvs_images["kv4"]} alt="" className="kv_sub_item_image"/>
 					            	</div>
 					            	<div className="kv_sub_item">
-					            		<img src={bistro.kvs["kv5"]} alt="" className="kv_sub_item_image"/>
+					            		<img src={bistro.kvs_images["kv5"]} alt="" className="kv_sub_item_image"/>
 					            	</div>
-	            					
-	            			
-	            		
-
-
 	            	</div>
 	            </div>
 
 	            <div className="description">
 	            	{bistro.description}
 	            </div>
-	            
+	            {bistro.points &&
 	            <section className="section points">
 	            	<h2 className="section_title">The Best of {bistro.name}</h2>
 	            	        <Swiper
@@ -123,6 +148,7 @@ export default function Bistro(){
 					   
 					        </Swiper>
 	            </section>
+	        	}
 	            <section className="section">
 	            	<h2 className="section_title">General Overview</h2>
 	            	<div className="information">
@@ -136,12 +162,18 @@ export default function Bistro(){
 		            			<dd>{bistro.opening_hour}</dd>
 		            			<dt>Average Cost</dt>
 		            			<dd>{(bistro.min_price+bistro.max_price)/2} RWF</dd>
-		            			
+		            			<dt>Number of the seats</dt>
+		            			<dd>{bistro.seats_number}</dd>
 		            			<dt>Payment Options</dt>
 		            			<dd>
-		            				{bistro.payment_options && bistro.payment_options.map((ele,i)=>(
-		            					<>{Payment_options[ele]['method']}{i !== bistro.payment_options.length-1 && ", "}</>
-		            					))
+		            				{bistro && checkedPaymentOptions.map((seenOptions,i)=>(
+		            							<>
+		            								{seenOptions["method"]}
+		            								{(checkedPaymentOptions.length !== (i+1))&& ", "}
+		            							</>
+		            						))
+
+
 		            				}
 		            			</dd>
 		            			<dt>Reservation</dt>
@@ -183,6 +215,19 @@ export default function Bistro(){
 	            		</div>
 	            	</div>
 	            </section>
+	            {bistro.menu_images &&
+	            <section className="section">
+	            	<h2 className="section_title">Menu</h2>
+	            	<div className="menu">
+		            	{bistro.menu_images.map((menu_image,i)=>(
+		            		<div className="menu_item">
+		            			<img src={menu_image.image} alt="" />
+		            		</div>
+		            		))}
+	            	</div>
+	            </section>
+	        	}
+	            
 	            <section className="section">
 	            	<h2 className="section_title">Reviews</h2>
 	            	<div className="rates">
@@ -344,6 +389,10 @@ const ReviewDetail = (e,id)=>{
 
 
 		)
+}
+
+const AmbienceIcon = ()=>{
+
 }
 
 

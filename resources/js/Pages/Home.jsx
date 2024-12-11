@@ -18,7 +18,7 @@ export default function Home(){
 	const {bistros} = usePage().props;
 	const [selectedBistros, setSelectedBistros] = useState(bistros);
 	const {auth} = usePage().props;
-	console.log(bistros);
+	
 	/*
 	$(window).on("scroll", function(){
 	let $searchForm = $('.js-search-form')
