@@ -7,11 +7,16 @@ import { useState } from "react"
 import { CgProfile} from 'react-icons/cg';
 
 import KigaliInformation from "../Admin/Shared/BistroForm/KigaliInfomation"
-import { Swiper, SwiperSlide } from 'swiper/react';
 import Modal from "@/Components/Modal"
+
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Pagination, Autoplay,EffectCube,EffectFade,EffectCoverflow} from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
-import { Pagination, Autoplay} from 'swiper/modules';
+import 'swiper/css/effect-cube';
+import 'swiper/css/effect-fade';
+import 'swiper/css/navigation';
+import 'swiper/css/effect-coverflow';
 
 import { Payment_options, BistroGenres,Reservation, Dietary_restrictions } from "../Admin/Shared/BistroForm/Categories"
 
@@ -107,46 +112,57 @@ export default function Bistro(){
 	            	{bistro.description}
 	            </div>
 	            {bistro.points &&
-	            <section className="section points">
+	            <section className="section images">
 	            	<h2 className="section_title">The Best of {bistro.name}</h2>
+	            	<div className="images_flex">
+	            		
 	            	        <Swiper
-					          slidesPerView={1.2}
-					          spaceBetween={20}
-					          pagination={{
-					            clickable: true,
-					          }}
-					          loop={true}
-					          centeredSlides={false}
-					          breakpoints={{
-					            640: {
-					              slidesPerView: 2,
-					              spaceBetween: 20,
-					            },
-					            768: {
-					              slidesPerView: 1.5,
-					              spaceBetween: 50,
-					            },
-					            960: {
-					              slidesPerView: 2.8,
-					              spaceBetween: 50,
-					            },
-					          }}
-					          autoplay={{
-					            delay: 7000,
-					            disableOnInteraction: false,
-					          }}
-					          modules={[Pagination,Autoplay]}
-					          className="mySwiper"
+								effect={'coverflow'}
+						        grabCursor={true}
+						        centeredSlides={true}
+						        slidesPerView={1.5}
+						        coverflowEffect={{
+						          rotate: 50,
+						          stretch: 0,
+						          depth: 100,
+						          modifier: 1,
+						          slideShadows: true,
+						        }}
+						        pagination={true}
+						        modules={[EffectCoverflow, Pagination]}
+						        className="mySwiper images_flex_item"
 					        >
 					        {bistro.points && bistro.points.map((point,i)=>(
-					        	<SwiperSlide>       
-					              	<img src={point["image"]} alt="" className="points_image"/>
+					        	<SwiperSlide key={i}>       
+					              	<img src={point["image"]} alt="" className="images_flex_item_image"/>
 					              	<p className="points_remarks">{point["remarks"]}</p>
 					             </SwiperSlide>
 					        ))}
-					             
-					   
 					        </Swiper>
+				
+					
+					        <Swiper
+								effect={'cube'}
+						        grabCursor={true}
+						        cubeEffect={{
+						          shadow: true,
+						          slideShadows: true,
+						          shadowOffset: 20,
+						          shadowScale: 0.94,
+						        }}
+						        pagination={true}
+						        modules={[EffectCube, Pagination]}
+						        className="mySwiper images_flex_item"
+					        >
+					        {bistro.menu_images && bistro.menu_images.map((menu_image,i)=>(
+								<SwiperSlide key={i}>    
+		            				<img src={menu_image.image} alt="" className="images_flex_item_image" />
+		            			</SwiperSlide>
+		   
+		            		))}
+					        </Swiper>
+					       
+					</div>
 	            </section>
 	        	}
 	            <section className="section">
@@ -215,18 +231,6 @@ export default function Bistro(){
 	            		</div>
 	            	</div>
 	            </section>
-	            {bistro.menu_images &&
-	            <section className="section">
-	            	<h2 className="section_title">Menu</h2>
-	            	<div className="menu">
-		            	{bistro.menu_images.map((menu_image,i)=>(
-		            		<div className="menu_item">
-		            			<img src={menu_image.image} alt="" />
-		            		</div>
-		            		))}
-	            	</div>
-	            </section>
-	        	}
 	            
 	            <section className="section">
 	            	<h2 className="section_title">Reviews</h2>
