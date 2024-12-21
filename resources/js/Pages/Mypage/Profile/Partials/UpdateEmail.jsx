@@ -1,12 +1,62 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
-import { useForm, usePage } from '@inertiajs/react';
-import { useRef } from 'react';
-
+import InputLabel from '@/Components/InputLabel';
+import InputError from '@/Components/InputError';
+import { Head, usePage,useForm } from '@inertiajs/react';
 import { PrimaryButton } from '@/Components/Button';
+import { ShowModal } from '@/Layouts/Layout';
+import { useContext,useRef } from 'react';
 
-export default function UpadateEmailForm({handleClickHideModal}) {
+
+
+function UpdateEmailIndex(){
+    const { post, processing } = useForm({});
+    const user = usePage().props.auth.user;
+    const {handleClickShowModal,handleClickHideModal} =useContext(ShowModal);
+    
+    const sendVerification = (e) => {
+        e.preventDefault();
+        post(route('verification.send'),{
+            preserveScroll: true,
+        }
+            );
+        
+    };
+    return(
+    <>
+        <section className="process_content_section section">
+        <h2 className='section_title'>Change Email</h2>
+        <div className='form input-area'>
+            <InputLabel htmlFor="email" value="Current Email" />
+            <TextInput
+                id="email"
+                value={user.email}
+                required
+                autoComplete="email"
+                type='email'
+                readOnly={true}
+            />
+            <InputError message={!user.email_verified_at ?"Your email has not been verified yet.":""} />
+        </div>
+            {!user.email_verified_at  && 
+                    <div className="link-area">
+                        <button id="update-email" disabled={processing} onClick={sendVerification}>
+                            Want to get a verification mail again?
+                        </button>
+                    </div>
+
+            }
+        <div className="btn-area">
+            <PrimaryButton id="update-email" onClick={handleClickShowModal}>
+                Change Email
+            </PrimaryButton>
+        </div>
+ 
+        </section>
+    </>
+    )
+}
+
+function UpdateEmailFormModal() {
     const emailInput = useRef();
     const currentPasswordInput = useRef();
     const {errors} = usePage().props;
@@ -21,7 +71,7 @@ export default function UpadateEmailForm({handleClickHideModal}) {
         email:"",
         password:"",
     });
-
+    const {handleClickHideModal} = useContext(ShowModal);
     const updateEmail = (e) => {
         e.preventDefault();
 
@@ -42,10 +92,9 @@ export default function UpadateEmailForm({handleClickHideModal}) {
 
     return (
         <>
-                <h2 className="section_title">
-                    Update Email
-                </h2>
-
+            <h1 className="main_title">
+                Update Email
+            </h1>
             <form onSubmit={updateEmail} className='form'>
                 <div className='input-area'>
                     <InputLabel htmlFor="email" value="New Email address" />
@@ -79,3 +128,5 @@ export default function UpadateEmailForm({handleClickHideModal}) {
         </>
     );
 }
+
+export {UpdateEmailIndex, UpdateEmailFormModal}

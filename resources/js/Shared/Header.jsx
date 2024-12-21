@@ -4,22 +4,53 @@ import { CgProfile} from 'react-icons/cg';
 import logo from '../../img/logo.png'
 import {IoSearch } from "react-icons/io5";
 import { FcLike } from "react-icons/fc";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef,useContext, createContext } from "react";
 import {usePage} from "@inertiajs/react";
 import Modal from "@/Components/Modal";
 import { MdOutlineManageAccounts } from "react-icons/md";
 import UserMenu from "./UserMenu";
 import AdminMenu from "./AdminMenu";
+import { ShowModal } from "@/Layouts/Layout";
+import { GorillaIcon } from "@/Script";
+import { useMediaQuery } from 'react-responsive'
+
 
 export default function Header(){
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    let status = usePage().props.status;
+    const isDesktop = useMediaQuery({query: '(min-width: 768px)'})
+    //const isTablet = useMediaQuery({query: '(min-width: 768)'})
+    //const isBigScreen = useMediaQuery({ query: '(min-width: 1824px)' })
+    const isTabletOrMobile = useMediaQuery({ query: '(max-width: 767px)' })
+    //const isPortrait = useMediaQuery({ query: '(orientation: portrait)' })
+    //const isRetina = useMediaQuery({ query: '(min-resolution: 2dppx)' })
     const auth = usePage().props.auth;
-    const [modalContent, setModalContent] = useState(true);
+    return(
+        <>
+            {isDesktop && <Header_pc auth={auth}/>}
+            {isTabletOrMobile && <Header_sp auth={auth}/>}
+            
+        </>
+        
+    )
+	
+}
+
+function Header_pc({auth}){
+    const {state,handleClickShowModal,modalContent,setModalContent,isModalOpen,
+        setIsModalOpen,modalState,setModalState,handleClickHideModal
+    } = useContext(ShowModal);
+
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [dropdownItem, setDropdownItem] = useState(null);
     const dropdownRef = useRef();
     const dropdownRef02 = useRef();
+    useEffect(()=>{
+        if(state){
+            setModalState(state)
+            setIsModalOpen(true)
+        }
+
+    },[state])
+
 
     const handleClickShowDropdown =(e)=>{
              setDropdownItem(e.currentTarget.id);
@@ -31,17 +62,6 @@ export default function Header(){
           ) && setIsDropdownOpen(false);                   
     }
     
-    const handleClickShowModal = (e)=>{
-        setIsModalOpen(true);
-        status = e.currentTarget.id;
-        setModalContent(status);
-        document.body.style.overflow = "hidden";
-    }
-    const handleClickHideModal = ()=>{
-        setIsModalOpen(false);
-        document.body.style.overflow = "auto";
-    }
-
     //after login, automatically shows verifyemail on the modal
     useEffect(()=>{
         if(auth.user && !auth.user.email_verified_at){
@@ -54,8 +74,7 @@ export default function Header(){
         };
         
     },[auth.user])
-
-	return(
+    return(
         <>
     		<header className="header wrap">
         		<ul className="header_general">
@@ -69,7 +88,12 @@ export default function Header(){
         		<ul className="header_mgmt">
                     <li className="header_mgmt_item">
                         <div  className="drop-down" id="user" onClick={handleClickShowDropdown} ref={dropdownRef}>
-                            <CgProfile /> 
+                            {auth.user  
+                                ?(auth.user.icon && String(auth.user.icon).indexOf("#") !== 0)
+                                ?<img src={auth.user.icon} />
+                                :<GorillaIcon color_code={auth.user.icon} />
+
+                            :<CgProfile />  }
                             {(dropdownItem === "user" && isDropdownOpen) &&(
                                 <ul className="drop-down_items"  > 
                                     <UserMenu auth={auth} handleClickHideModal={handleClickHideModal}
@@ -96,15 +120,22 @@ export default function Header(){
                     }
         		</ul>  
             </header>
-    
-
-            <Modal modalContent={modalContent} setModalContent={setModalContent} 
-                isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} handleClickHideModal={handleClickHideModal}/>
         </>
 		)
 }
 
 function Header_sp({auth}){
+    const {state,handleClickShowModal,modalContent,setModalContent,isModalOpen,
+        setIsModalOpen,modalState,setModalState,handleClickHideModal
+    } = useContext(ShowModal);
+
+    useEffect(()=>{
+        if(state){
+            setModalState(state)
+            setIsModalOpen(true)
+        }
+
+    },[state])
     return(
 
         <header className="header-sp">
@@ -115,7 +146,7 @@ function Header_sp({auth}){
                 <p className="header-sp_icon-area_title">Explore</p>
             </div>
             <div className="header-sp_icon-area">
-                <Link href="/" className="header-sp_icon-area_link">
+                <Link href="/mypage" className="header-sp_icon-area_link">
                     <FcLike />
                 </Link>
                 <p className="header-sp_icon-area_title">Wishlists</p>
@@ -123,17 +154,21 @@ function Header_sp({auth}){
             <div className="header-sp_icon-area">
                 {auth.user?(
                     <>
-                        <Link href="/" className="header-sp_icon-area_link">
-                         <CgProfile />
+                        <Link href="/profile"  className="header-sp_icon-area_link">
+                        {auth.user  
+                                ?(auth.user.icon && String(auth.user.icon).indexOf("#") !== 0)
+                                ?<img src={auth.user.icon} />
+                                :<GorillaIcon color_code={auth.user.icon} />
+                            :<CgProfile />  }
                         </Link>
-                        <p className="header-sp_icon-area_title">Logout</p>
+                        <p className="header-sp_icon-area_title">Profile</p>
                     </>
 
                 ):(
                     <>
-                        <Link href="/" className="header-sp_icon-area_link">
+                        <button id="login" onClick={handleClickShowModal} className="header-sp_icon-area_link">
                          <CgProfile />
-                        </Link>
+                        </button>
                         <p className="header-sp_icon-area_title">Login</p>
                     </>
                 )}
@@ -146,17 +181,5 @@ function Header_sp({auth}){
 
 export {Header_sp};
 
-
-/*{auth.user.admin ??(
-                         <>
-                            <li className="header_ul-area_li_user_items_li" >
-                                <Link href={route('admin.mypage')}>Admin Mypage</Link>
-                            </li>
-        
-                         </>
-
-                            )
-
-                        } */
 
  

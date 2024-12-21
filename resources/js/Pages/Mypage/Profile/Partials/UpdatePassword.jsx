@@ -1,13 +1,33 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import TextInput from '@/Components/TextInput';
-import { Transition } from '@headlessui/react';
-import { useForm, usePage } from '@inertiajs/react';
-import { useRef } from 'react';
+import { PrimaryButton } from "@/Components/Button"
+import { ShowModal } from "@/Layouts/Layout"
+import { useContext,useRef } from "react"
+import { usePage,useForm } from "@inertiajs/react";
+import InputLabel from "@/Components/InputLabel";
+import TextInput from "@/Components/TextInput";
+import InputError from "@/Components/InputError";
 
-import { PrimaryButton } from '@/Components/Button';
+function UpdatePasswordIndex(){
+    const {handleClickShowModal} = useContext(ShowModal);
+    return(
+        <>
+        <section className="process_content_section section">
+            <h2 className='section_title'>Change password</h2>
+            <p className="process_content_section_text">
+                Ensure your account is using a long, random password to stay
+                secure.
+            </p>
+            <div className="btn-area">
+                <PrimaryButton id="update-password" onClick={handleClickShowModal}>
+                    Change Passowrd
+                </PrimaryButton>
+            </div>
+        </section>
+        </>
+    )
+}
 
-export default function UpdatePasswordForm({handleClickHideModal}) {
+function UpdatePasswordFormModal() {
+    const {handleClickHideModal} = useContext(ShowModal)
     const passwordInput = useRef();
     const currentPasswordInput = useRef();
     const {errors} = usePage().props;
@@ -49,13 +69,10 @@ export default function UpdatePasswordForm({handleClickHideModal}) {
 
     return (
         <>
-                <h2 className="section_title">
-                    Update Password
-                </h2>
-                <p className="process_content_section_text">
-                    Ensure your account is using a long, random password to stay
-                    secure.
-                </p>
+            <h1 className="main_title">
+                Update Password
+            </h1>
+
 
             <form onSubmit={updatePassword} className='form'>
                 <div className='input-area'>
@@ -101,4 +118,6 @@ export default function UpdatePasswordForm({handleClickHideModal}) {
             </form>
         </>
     );
-}
+} 
+
+export {UpdatePasswordIndex,UpdatePasswordFormModal}

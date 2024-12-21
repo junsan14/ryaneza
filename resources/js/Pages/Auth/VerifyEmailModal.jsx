@@ -1,9 +1,11 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { PrimaryButton } from '@/Components/Button';
+import { useContext } from 'react';
+import { ShowModal } from '@/Layouts/Layout';
 
-export default function VerifyEmail({ status,auth,handleClickHideModal }) {
+export default function VerifyEmail() {
     const { post, processing } = useForm({});
-
+    const {handleClickHideModal} = useContext(ShowModal);
     const submit = (e) => {
         e.preventDefault();
 

@@ -254,7 +254,7 @@ const CountryList =[
     "code": "TD"
 },
 {
-    "name": "Chile",
+    "name": "Cameroon",
     "dial_code": "+56",
     "emoji": "🇨🇱",
     "code": "CL"

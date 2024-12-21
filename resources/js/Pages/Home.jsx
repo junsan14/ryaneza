@@ -3,7 +3,7 @@ import Footer from "@/Shared/Footer";
 import { IoSearchCircle,IoSearch } from "react-icons/io5";
 import Layout from "@/Layouts/Layout";
 import { FaStar } from "react-icons/fa";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import $ from 'jquery';
 import { usePage, Link, router, useForm } from "@inertiajs/react";
 import KigaliInformation from "./Admin/Shared/BistroForm/KigaliInfomation";
@@ -12,13 +12,16 @@ import { BistroGenres } from "./Admin/Shared/BistroForm/Categories";
 import { CiEdit } from "react-icons/ci";
 import { MdOutlineDelete } from "react-icons/md";
 import Bistro from "./Bistro/Bistro";
-
+import { FaRegHeart,FaHeart } from "react-icons/fa6";
+import { numberWithCommas,roundToTwo } from "@/script";
 
 export default function Home(){
 	const {bistros} = usePage().props;
 	const [selectedBistros, setSelectedBistros] = useState(bistros);
 	const {auth} = usePage().props;
-	
+	const {averageRates} = usePage().props;
+	let wishlist = auth.user && auth.user.wishlist  ? auth.user.wishlist :[];
+
 	/*
 	$(window).on("scroll", function(){
 	let $searchForm = $('.js-search-form')
@@ -38,54 +41,67 @@ export default function Home(){
 
 	})
 	*/
-const {
-        data,
-        setData,
-        delete: destroy,
-        processing,
-        reset,
-        clearErrors,
-        progress
-    } = useForm({
-        id:"",
-});
+	const {data,setData,delete: destroy,post ,reset,} = useForm({});
     useEffect(()=>{
     	setSelectedBistros(bistros);
     },[bistros])
-const handleClickDelete = (e)=>{
-        let id = Number(e.currentTarget.id);
-        e.preventDefault();
-        //$(e.currentTarget).parent().prop('disabled', true);
-        //$(e.currentTarget).css('cursor', "not-allowed");
-        //setEditInfo([id, "", "delete"]);
-        destroy(route('bistro.destroy',{id:id}),{
-        	onBefore: () => {
-                    const res = confirm('Do you really want to delete?');
-                    if(!res){
-                        //$(e.currentTarget).parent().prop('disabled', false);
-                        //$(e.currentTarget).css('cursor', "pointer");
-                    }
-                    return res;
-             },
-            onFinish: () => reset(),
-            preserveScroll:true
-        });
-     }
+	const handleClickDelete = (e,id,name)=>{
+		e.preventDefault();
+		destroy(route('bistro.destroy',{id:id, name:name}),{
+			onBefore: () => {
+					const res = confirm('Do you really want to delete?');
+					if(!res){
+						//$(e.currentTarget).parent().prop('disabled', false);
+						//$(e.currentTarget).css('cursor', "pointer");
+					}
+					return res;
+				},
+			onFinish: () => reset(),
+			preserveScroll:true
+		});
+	}
+	const handleClickLike = (e,id)=>{
+		e.preventDefault();
+		//setData("wishlist",[...data.wishlist ,id]);
+		wishlist.push(id);
+		console.log(wishlist)
+		
+		post(route('profile.wishlist.update', {wishlist:wishlist}),{
+			preserveScroll:true,
+		})
+		
+	}
+	const handleClickUnLike = (e,id)=>{
+		e.preventDefault();
+		//setData("wishlist",[id]);
+		wishlist = wishlist.filter((ele,i)=> ele != id);
+		console.log(wishlist)
+	
+		post(route('profile.wishlist.update', {wishlist:wishlist}),{
+			preserveScroll:true,
+		})
+	
+	}
+     //console.log(bistros)
 	return(
 		<Layout>
 			<SearchForm bistros={bistros} setSelectedBistros={setSelectedBistros} />
 			<div className="home">
+			
+
+
 				<section className="section pickup">
 					<h2 className="section_title">PICK UP</h2>
 					<div className="bistros">
 					{selectedBistros &&selectedBistros.map((bistro,i)=>(
-						<div className="bistros_item">
-							{(auth.user && auth.user.admin) &&(
+						<div className="bistros_item" key={i}>
+							{(auth.user && auth.user.admin) ?(
 								<>
 									<button className="bistros_item_delete">
-										<Link id={bistro.id} onClick={(e)=>handleClickDelete(e)} >
+										<Link onClick={(e,id=bistro.id,name=bistro.name)=>handleClickDelete(e,id,name)} >
 											<MdOutlineDelete />
 										</Link>
+
 									</button>
 									<button className="bistros_item_edit">
 										<Link href="/edit-bistro" data={{id:bistro.id}} >
@@ -93,17 +109,41 @@ const handleClickDelete = (e)=>{
 										</Link>
 									</button>
 								</>
-							)}
-							<Link href="/bistro" data={{ id: bistro.id, name: bistro.name }} className="bistros_item_content" key={i}>
-								<img src={bistro.thumbnail} alt="" className="bistros_item_content_thumbnail" />
+							):<></>}
+							{(auth.user && auth.user.wishlist  && auth.user.wishlist.find(ele=>ele == bistro.id) )?
+							<div className="bistros_item_like">
+								<button onClick={(e,id=bistro.id)=>handleClickUnLike(e,id)}>
+									<FaHeart />
+								</button>
+							</div>
+							:
+							<div className="bistros_item_like">
+								<button onClick={(e,id=bistro.id)=>handleClickLike(e,id)}>
+									<FaRegHeart />
+								</button>
+							</div>
+							
+							}
+							<Link href="/bistro" data={{ id: bistro.id, name: bistro.name }} className="bistros_item_content" key={i}>		
+								<img src={bistro.thumbnail_image&&bistro.thumbnail_image[0]["src"]} alt="" className="bistros_item_content_thumbnail" />
 								<h3 className="bistros_item_content_title">{bistro.name}</h3>
 								<p className="bistros_item_content_location">{KigaliInformation["districts"][KigaliInformation["provinces"][bistro.province].toLowerCase()][bistro.district]}, {KigaliInformation["provinces"][bistro.province]}</p>
 								<div className="bistros_item_content_remarks">
 									<p className="bistros_item_content_remarks_price">
-										{(bistro.min_price + bistro.max_price)/2} RWF
+										{numberWithCommas((bistro.min_price + bistro.max_price)/2)} RWF
 									</p>
 									<div className="bistros_item_content_remarks_star">
-										<FaStar /> <span>4.5</span>
+									{averageRates[bistro.id] ? 
+										<>
+											<FaStar /> 
+											<span>
+												{averageRates[bistro.id] ? roundToTwo(averageRates[bistro.id]):"N"}
+											</span>
+										</>
+									:<>
+									New!
+									</>}
+										
 									</div>
 								</div>
 							</Link>
@@ -183,7 +223,7 @@ function SearchForm({bistros, setSelectedBistros}){
 				<select onChange={handleChangeSearch} id="genre" className="search-form_input-area_select" >
 							<option value="all">All</option>
 					{BistroGenres.map((genre,i)=>(
-							<option value={i}>{genre}</option>
+							<option key={i} value={i}>{genre}</option>
 						))}
 				</select>	
 			</div>

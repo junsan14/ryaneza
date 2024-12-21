@@ -12,14 +12,28 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\Rules;
 
+use App\Models\User;
+use App\Models\Bistro_review;
+
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
+use Illuminate\Support\Facades\File;
 
 class BistroController extends Controller
 {
     public function home(): Response
     {
         $bistros = Bistro::latest('created_at')->get();
-        return Inertia::render('Home', ['bistros'=>$bistros]);
+        $bistro_ids = Bistro::select('id')->latest('created_at')->get();
+        $averageRates = [];
+        foreach($bistro_ids as $key=>$bistro_id){
+            $averageRate = Bistro_review::where('bistro_id', $bistro_id->id)->avg('overall_rate');
+            $averageRates[$bistro_id->id] = $averageRate;
+        }
+       
+        return Inertia::render('Home', ['bistros'=>$bistros, 'averageRates'=>$averageRates]);
         
     }
     public function create(): Response
@@ -38,67 +52,53 @@ class BistroController extends Controller
     public function show(Request $request): Response
     {
         $id = $request->query('id');
+      
         $bistro = Bistro::find([['id','=' , $id]])->first();
-        
-        return Inertia::render('Bistro/Bistro', ['bistro'=>$bistro]);
+        $bistro_reviews = Bistro_review::where('bistro_id', $id)->join('users', 'users.id', '=', 'bistro_reviews.author_id')
+                         ->latest('bistro_reviews.created_at')->get();
+      
+        //dd($bistro_reviews);
+        return Inertia::render('Bistro/Bistro', ['bistro'=>$bistro, 'bistro_reviews'=>$bistro_reviews]);
         
     }
-    public function store(Request $request): Response
-    {  
+    public function store(Request $request): RedirectResponse
+    {
+        $manager = new ImageManager(new Driver());
         $now = Carbon::now();
         $time = $now->year."_".$now->month."_".$now->day."_".$now->hour.$now->minute.$now->second;
-        $images = $request->file();
-        $thumbnailPath = "";
-        $kvsPath = $request->kvs_images;
-        $pointsPath = $request->points;
-        $menusPath = $request->menu_images;
-        if(!empty($images)){
-            foreach ($images as $key=>$image) {
-                if($key === "thumbnail"){
-                    $imageName = $time."_".$request->name."_".$key.".".$image->getClientOriginalExtension();
-                    $path = $image->storeAs('images',$imageName, 'public');
+        $allImages = $request->file();
+        $imageArrays = [
+            "thumbnail_image"=>$request->thumbnail_image,
+            "kv_images"=>$request->kv_images,
+            "interior_slides"=>$request->interior_slides,
+            "food_slides"=>$request->food_slides,
+            "menu_images"=>$request->menu_images
+        ];
+    
+   
+        $thumbnail = $request->thumbnail_image;
+        $kvs = $request->kv_images;
+        $interiors = $request->interior_slides;
+        $food = $request->food_slides;
+        //dd($allImages);
+        if(!empty($allImages)){
+            foreach ($allImages as $key => $eachImages) {
+                //dd($eachImages);
+                foreach($eachImages as $index=>$image){
+                     $imageName = $time."_".$request->name."_".$key.$index."."."webp";
+                     $img = $manager->read($image['src']);
+                    if(!File::exists(storage_path('app/public/images/bistros/'.$request->name))){
+                        File::makeDirectory(storage_path('app/public/images/bistros/' . $request->name));
+                    }
+                    $img->save(storage_path('app/public/images/bistros/'.$request->name."/".$imageName));
+                    $path = '/images/bistros/'.$request->name."/".$imageName;
                     $url = Storage::url($path);
-                    $thumbnailPath= $url;
-                }elseif($key === "kvs"){
-                    foreach($image as $key=>$kv){
-                        $imageName = $time."_".$request->name."_".$key.".".$kv->getClientOriginalExtension();
-                        $path = $kv->storeAs('images',$imageName, 'public');
-                        $url = Storage::url($path);
-                        $kvsPath[$key] = $url ;
-                    }
-              
-                }elseif($key === "points"){
-                    foreach($image as $key=>$point){          
-                    
-                        $imageName = $time."_".$request->name."_point".$key.".".$point['image']->getClientOriginalExtension();
-                        $path = $point['image']->storeAs('images',$imageName, 'public');
-                        $url = Storage::url($path);
-        
-                        foreach($pointsPath as $i=>$pointPath){
-                            if($pointPath['id'] === 'point'.($key+1) ){    
-                                $pointsPath[$i]['image'] = $url;
-                            }
-                        }  
-                    }
-                }
-                elseif($key === "menu_images"){
-                    //dd($key);
-                    foreach($image as $key=>$menu_image){          
-                    
-                        $imageName = $time."_".$request->name."_point".$key.".".$menu_image['image']->getClientOriginalExtension();
-                        $path = $menu_image['image']->storeAs('images',$imageName, 'public');
-                        $url = Storage::url($path);
-                        foreach($menusPath as $i=>$menuPath){
-                             //dd($menusPath);
-                            if($menuPath['id'] === 'menu_image'.($key+1) ){    
-                                $menusPath[$i]['image'] = $url;
-                            }
-                        } 
-                    }
+                    $imageArrays[$key][$index]['src']=$url;  
                 }
             }
+            
         }
-        
+        //dd($imageArrays["thumbnail_image"]);
         Bistro::updateOrCreate(
             ['id'=> $request->id],
             [
@@ -120,10 +120,11 @@ class BistroController extends Controller
             'ambience' => $request->ambience,
             'time_occasion' => $request->time_occasion,
             'dietary_restriction' => $request->dietary_restriction,
-            'thumbnail' => $thumbnailPath?$thumbnailPath:$request->thumbnail,
-            'kvs_images'=>$kvsPath,
-            'points'=>!empty($pointsPath)?$pointsPath:$request->points,
-            'menu_images'=>$menusPath,
+            'thumbnail_image' => $imageArrays["thumbnail_image"],
+            'kv_images'=>$imageArrays["kv_images"],
+            'interior_slides'=>$imageArrays["interior_slides"],
+            'food_slides'=>$imageArrays["food_slides"],
+            'menu_images'=>$imageArrays["menu_images"],
             'seats_number' => $request->seats_number,
             'min_price' => $request->min_price,
             'max_price' => $request->max_price,
@@ -133,23 +134,22 @@ class BistroController extends Controller
             
         ]);
         if($request->is_edit){
-             return Inertia::render('Home', ['message'=>$request->name.' is editted']);
-             //return back()->with(['message'=>$request->name.' is editted']);
+             return redirect('/')->with(['message'=>$request->name.' editted']);
         }else{
-             return Inertia::render('Home', ['message'=>$request->name.' is created']);
+             return redirect('/')->with(['message'=>$request->name.' created']);
         }
        
        // return redirect('/')->with(['message'=>$request->name.' is created']);
         //return back()->with(['message'=>$request->name.' is created']);
         
     }
-     public function destroy(Request $request)
+     public function destroy(Request $request):RedirectResponse
     {
-        
         $id = $request->query('id');
 
         Bistro::where('id', $id)->delete(); 
-        return back();
+        return redirect('/')->with(['message'=>$request->query('name').' deleted']);
+        //return back()->with(['message'=>$request->query('name').' is deleted']);
         
        
     }

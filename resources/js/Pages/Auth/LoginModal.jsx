@@ -4,15 +4,20 @@ import InputLabel from '@/Components/InputLabel';
 import {PrimaryButton} from '@/Components/Button';
 import TextInput from '@/Components/TextInput';
 import { Head, Link, useForm,router, usePage, useRemember} from '@inertiajs/react';
+import { ShowModal } from '@/Layouts/Layout';
+import { useContext } from 'react';
 
-export default function Login({ status, canResetPassword,setModalContent,handleClickHideModal }) {
+export default function LoginModal() {
     const {errors} = usePage().props;
+    const {state} = useContext(ShowModal);
+    const {setModalState} = useContext(ShowModal)
+ 
+    const {handleClickHideModal} = useContext(ShowModal);
     const [formState, setFormState] = useRemember({
         email:"",
         password:"",
         remember:false
     },'Auth/Login')
-  
     const form = useForm('Auth/Login',formState);
     const handleChangeData = (e)=>{
         const key = e.target.id;
@@ -80,7 +85,7 @@ export default function Login({ status, canResetPassword,setModalContent,handleC
                 </PrimaryButton>
             </form>
             <div className="link-area">
-                <button onClick={()=>setModalContent('forgotpassword')}>
+                <button onClick={()=>setModalState('forgot-password')}>
                     Forgot password?
                 </button>
             </div>

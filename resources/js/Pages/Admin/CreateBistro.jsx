@@ -13,32 +13,55 @@ import KigaliInformation from './Shared/BistroForm/KigaliInfomation';
 import {BistroGenres, BistroSpecialities, BistroStyles, Time_occasions, Ambiences, Occasions,Dietary_restrictions, Payment_options, Reservation} from './Shared/BistroForm/Categories';
 import { CiCirclePlus } from "react-icons/ci";
 import { FaImage } from "react-icons/fa";
+import { useImmer } from 'use-immer';
+import { list } from 'postcss';
+import { preconnect } from 'react-dom';
 
 
 
 export default function CreateBistro(){
 	const {bistro} = usePage().props;
-	const imagePreviewPoints ={
-		thumbnail:bistro?bistro.thumbnail:"",
-		kv1:bistro?bistro.kvs_images["kv1"]:"",
-		kv2:bistro?bistro.kvs_images["kv2"]:"",
-		kv3:bistro?bistro.kvs_images["kv3"]:"",
-		kv4:bistro?bistro.kvs_images["kv4"]:"",
-		kv5:bistro?bistro.kvs_images["kv5"]:"",
+	const initialPreviewImages =[
+		{thumbnail_image:[{id:0, src:bistro?bistro.thumbnail_image[0]["src"]:"" }]},
+		{kv_images:[
+			{id:0, src:bistro?bistro.kv_images[0]["src"]:""},
+			{id:1, src:bistro?bistro.kv_images[1]["src"]:""},
+			{id:2, src:bistro?bistro.kv_images[2]["src"]:""},
+			{id:3, src:bistro?bistro.kv_images[3]["src"]:""},
+			{id:4, src:bistro?bistro.kv_images[4]["src"]:""},
+			],
+		},	
+		{interior_slides:[]},
+		{food_slides:[]},
+		{menu_images:[]},
 
-	}
+	]
 
-	if(bistro ){
-	    bistro.points && bistro.points.map((point,i)=>{
-	    	imagePreviewPoints[`point${i+1}_picture`] = bistro.points[i]["image"]
-	    })
-	    bistro.menu_images && bistro.menu_images.map((menu_image,i)=>{
-	    	//console.log(menu_image)
-	    	imagePreviewPoints[`menu_image${i+1}_picture`] = menu_image["image"]
-	    })
+
+	if(bistro){
+		
+		bistro.interior_slides && bistro.interior_slides.map((ele,i)=>{
+   			initialPreviewImages[2]["interior_slides"][i] =
+   				{id:i, src: bistro.interior_slides[i]["src"], remarks:bistro.interior_slides[i]["remarks"]}
+   			
+   		})
+
+   		bistro.food_slides && bistro.food_slides.map((ele,i)=>{
+   			initialPreviewImages[3]["food_slides"][i] =
+   				{id:i, src: bistro.food_slides[i]["src"], remarks:bistro.food_slides[i]["remarks"]}
+   		})
+   		bistro.menu_images && bistro.menu_images.map((ele,i)=>{
+   			initialPreviewImages[4]["menu_images"][i] = 
+   				{id:i, src: bistro.menu_images[i]["src"]}
+   		})
+	}else{
+		initialPreviewImages[2]["interior_slides"][0] ={id:0, src:"", remarks:""}
+		initialPreviewImages[3]["food_slides"][0] ={id:0, src:"", remarks:""}
+		initialPreviewImages[4]["menu_images"][0] ={id:0, src:"", remarks:""}
 	}
-	
-	const [imagePreview, setImagePreview] = useState(imagePreviewPoints);
+	const [previewImages, setPreviewImages] = useImmer(initialPreviewImages);
+	 //previewImages.splice(0,1)
+	//console.log(previewImages)
 	const { data, setData, post, processing, errors, reset } = useForm({
 		id:bistro?bistro.id:"",
         name: bistro?bistro.name:'',
@@ -47,7 +70,7 @@ export default function CreateBistro(){
         district:bistro?bistro.district: 1,
         sector: bistro?bistro.sector:'',
         address: bistro?bistro.address:'',
-        google_map: bistro?bistro.google_map:'',
+        google_map: bistro?bistro.google_map:[],
         opening_hour: bistro?bistro.opening_hour:'',
         mobile: bistro?bistro.mobile:'',
         email: bistro?bistro.email:'',
@@ -58,17 +81,22 @@ export default function CreateBistro(){
         ambience:bistro?bistro.ambience:0,
         time_occasion: bistro?bistro.time_occasion:0,
         dietary_restriction: bistro?bistro.dietary_restriction:0,
-        thumbnail:bistro?bistro.thumbnail: "storage/images/noimage.png",
-        kvs_images:{
-        	kv1:bistro?bistro.kvs_images["kv1"]:"",
-        	kv2:bistro?bistro.kvs_images["kv2"]:"",
-        	kv3:bistro?bistro.kvs_images["kv3"]:"",
-        	kv4:bistro?bistro.kvs_images["kv4"]:"",
-        	kv5:bistro?bistro.kvs_images["kv5"]:""
-        },
-        points:bistro?bistro.points:[{ id: `point1`, image:"", remarks:""}],
+        thumbnail_image:bistro?bistro.thumbnail_image: [
+        	{id:0,"src":"storage/images/noimage.png"}
+        ],
+        
+        kv_images:bistro?bistro.kv_images:
+        [
+        	{id:0,src:bistro?bistro.kv_images[0]["src"]:""},
+        	{id:1,src:bistro?bistro.kv_images[1]["src"]:""},
+        	{id:2,src:bistro?bistro.kv_images[2]["src"]:""},
+        	{id:3,src:bistro?bistro.kv_images[3]["src"]:""},
+        	{id:4,src:bistro?bistro.kv_images[4]["src"]:""},
+        ],
+        interior_slides:bistro?bistro.interior_slides:bistro?bistro.interior_slides:[{ id:0, src:"", remarks:""}],
+        food_slides:bistro?bistro.food_slides:bistro?bistro.food_slides:[{ id: 0, src:"", remarks:""}],
         menu_images:bistro?bistro.menu_images:[
-        	{id:"menu_image1", image:""}
+        	{id:0, src:""}
         	],
         seats_number:bistro?bistro.seats_number:0,
         min_price:bistro?bistro.min_price:1000,
@@ -79,110 +107,102 @@ export default function CreateBistro(){
         is_edit:bistro?true:false,
 
     });
-console.log(bistro)
+
     const handleChangeData = (e)=>{
         setData(e.target.id, e.target.value);
         
     }
-    const handleClickAddUploader = (e)=>{
+    const handleClickAddUploader = (e,dataname, name_id)=>{
     	e.preventDefault();
-    	const pointsNum = data.points.length;
-    	const menuNum = data.menu_images.length;
+    	const arrayNum = data[dataname].length;
     	let propertyName;
-
-    	if(e.currentTarget.id.indexOf("point") > 0){
-    		setData("points",[
-	    		...data.points,
-	    		{ id: `point${pointsNum+1}`, image:"", remarks:""}
+    		setData(dataname,[
+	    		...data[dataname],
+	    		{ id: arrayNum, src:"", remarks:""}
 	    	])
-	    	propertyName = `point${pointsNum+1}_picture`
-    	}else if(e.currentTarget.id.indexOf("menu") > 0){
-   
-    		setData("menu_images",[
-	    		...data.menu_images,
-	    		{id:`menu_image${menuNum+1}`, image:""}
-	    	])
-	    	propertyName = `menu_image${menuNum+1}`
-    	}
-
-    	setImagePreview({
-    		...imagePreview,
-    		[propertyName]:""
-    	})
+	    	propertyName = `${dataname}${arrayNum+1}`
     	
+    	
+    	setPreviewImages(data =>{
+    		data[name_id][dataname][arrayNum] = { id: arrayNum, src:"", remarks:""};
+
+    	})
     }
-	const handleImageChange = (e) => {
-		const key = e.target.id;
-		console.log(key);
+	const handleImageChange = (e,dataname,name,name_id,list_id) => {	
+		//console.log(dataname, name, list_id)
 		//Set image to Preview 
         const reader = new FileReader()
-          reader.onload = (e) => {
-		     setImagePreview(data => ({
-	            ...imagePreview,
-	            [key]: e.target.result,
-	        }))
-		  }
+        reader.onload = function(event) {
+		    // The file's text will be printed here
+		    setPreviewImages(data =>{
+	        	data[name_id][dataname][list_id]["src"] =event.target.result;
+	        })
+		 };
+
 		  reader.readAsDataURL(event.target.files[0])
-
-		if(key === "thumbnail"){
-			setData(key,e.target.files[0]);
-		}else if(String(key).indexOf("kv") === 0){
-				setData("kvs",{
-	    		...data.kvs,
-	    		[key]:e.target.files[0]
-	    	})
-		}else if(String(key).indexOf("point") === 0){
-			const id = e.target.closest('.point').id;
-
-			const nextPoints = data.points.map((point,i)=>{
-			   	if(point.id === id){
+		  //save data
+			setData(dataname, data[dataname].map((ele,i)=>{
+			   	if(ele.id == list_id){
 			   		return {
-			   			...point,
-			   			image:e.target.files[0],
+			   			...ele,
+			   			src:e.target.files[0],
 			   		}
 			   	}else{
-			   		return {...point}
+			   		return {...ele}
 			   	}
-			   })
-		   	setData("points",nextPoints)
-		   	console.log(data.points)
-		}
-		else if(String(key).indexOf("menu") === 0){
-			const id = e.target.closest('.menu').id;
-			console.log(id);
-			const nextMenu = data.menu_images.map((menu_image,i)=>{
-			   	if(menu_image.id === id){
-			   		return {
-			   			...menu_image,
-			   			image:e.target.files[0],
-			   		}
-			   	}else{
-			   		return {...menu_image}
-			   	}
-			   })
-		   	setData("menu_images",nextMenu)
-		   	console.log(data.menu_images)
-		}
-						
+			}))
     };
-    const handleClickDeletePreview = (e)=>{
+    const handleChangeRemarks = (e, dataname,name,name_id,list_id) =>{
+    	//console.log(dataname, name, name_id, list_id)
+    	//console.log(list_id)
+	   setData(dataname, data[dataname].map((ele,i)=>{
+		   	if(ele.id == list_id){
+		   		return {
+		   			...ele,
+		   			remarks:e.target.value,
+		   		}
+		   	}else{
+		   		return {...ele}
+		   	}
+		   }))   
+	}
+
+    const handleClickDeleteUploader = (e,dataname,name,name_id,list_id)=>{
     	 e.preventDefault();
-    	const key = e.target.value;
-   
-    	setImagePreview(data => ({
-	            ...imagePreview,
-	            [key]: "",
-	     }))
+		setPreviewImages(draft=>{
+			const previewImages = draft[name_id][dataname];
+			previewImages.map((previewImage,i)=>{
+				if(i === list_id){
+					previewImage.id = -1;
+				}
+				else if(i > list_id){
+					previewImage.id = previewImage.id-1;
+				}
+			})
+			
+			//delete selected Image
+			draft[name_id][dataname] = previewImages.filter(ele=>ele.id !== -1);
+			
+		})
+        setData(dataname, 
+			data[dataname].map((ele,i)=>{
+				if(i === list_id){
+					return{
+						...data[dataname][ele.id],
+						id:-1
+					}
+				}else if(i>list_id){
+					return{
+						...data[dataname][i],
+						id:data[dataname][i].id-1
+					}
+				}else{
+					return{...data[dataname][i]}
+				}
+			}).filter((ele)=>ele.id !== -1)
+		)
     }
 	const handleTogglePaymentMethod = (methodid,nextChecked)=>{
-		/*
-		data.payment_options.map((payment_option,i) => {
-			(payment_option.id === methodid )&&(Payment_options[i].checked = nextChecked);
-		
-		})
-		*/
-		
-		//setData('payment_options', Payment_options);
 		setData('payment_options', data.payment_options.map((payment_option,i) => {
 			if(payment_option.id === methodid ){
 				return {
@@ -193,22 +213,6 @@ console.log(bistro)
 				return {...payment_option}
 			}
 		}))
-	}
-	const handleChangeRemarks = (e) =>{
-	   const key = e.target.closest('.point').id;
-	   console.log(key);
-	   	const nextPoints = data.points.map((point,i)=>{
-		   	if(point.id === key){
-		   		return {
-		   			...point,
-		   			remarks:e.target.value,
-		   		}
-		   	}else{
-		   		return {...point}
-		   	}
-		   })
-	   	setData("points",nextPoints)
-	   
 	}
     const submit = (e) => {
         e.preventDefault();
@@ -225,11 +229,11 @@ console.log(bistro)
 	                {bistro?"Edit ":"Create "}Bistro
 	            </h1>
 	            
-	            <form onSubmit={submit} className='form' id="form" enctype="multipart/form-data">
+	            <form onSubmit={submit} className='form' id="form" encType="multipart/form-data">
 	            	<section className='section'>
 		            	<h2 className='section_title'>Basic Info</h2>
 		                <div className='input-area'>
-		                    <InputLabel htmlFor="name" value="Bistro Name" />
+		                    <InputLabel htmlFor="name" value="Bistro Name (Required)" />
 		                    <TextInput 
 		                        id="name"
 		                        type="text"
@@ -237,7 +241,6 @@ console.log(bistro)
 		                        value={data.name}
 		                        onChange={handleChangeData}
 		                        autoComplete="name"
-		                        placeholder=''
 		                        required
 		                    />
 		                    <InputError message={errors.name} />
@@ -295,12 +298,16 @@ console.log(bistro)
 		                    <InputError message={errors.address} />
 		                </div>
 		                <div className='input-area'>
-		                    <InputLabel htmlFor="google_map" value="Google Map URL" />
+		                    <InputLabel htmlFor="google_map" value="Google Map latitude & longitude (Required)" />
 		                    <TextInput
 		                        id="google_map"
 		                        value={data.google_map}
-		                        onChange={handleChangeData}
+		                        onChange={(e)=>{			
+									setData(e.target.id,e.target.value.split(","))
+								}}
 		                        autoComplete="google_map"
+								placeholder="-1.943135666719068, 30.090251626156217"
+								required
 		                    /> 
 		                    <InputError message={errors.google_map} />
 		                </div>
@@ -372,10 +379,15 @@ console.log(bistro)
 		                    <InputLabel htmlFor="occasion" value="Occasion" />
 		                    <TextSelect
 		                        id="occasion"
-		                        value={data.occasion}
-		                        onChange={handleChangeData}
-		                        autoComplete="occasion"
-		                        required
+		                        className="multiple"
+		                        onChange={(e)=>{
+		                        	const updatedOptions = [...e.target.options]
+								      .filter(option => option.selected)
+								      .map(x => x.value);
+								    setData(e.target.id,updatedOptions);
+		                       } }
+		                        multiple={true}
+							   value={data.occasion}
 		                    >
 		                    {Occasions.map((occasion,i)=>(
 		                    	<option value={i} key={i}>{occasion}</option>
@@ -385,12 +397,17 @@ console.log(bistro)
 		                </div>
 		                <div className='input-area'>
 		                    <InputLabel htmlFor="ambience" value="Ambience" />
-		                    <TextSelect
+							<TextSelect
 		                        id="ambience"
-		                        value={data.ambience}
-		                        onChange={handleChangeData}
-		                        autoComplete="ambience"
-		                        required
+		                        className="multiple"
+		                        onChange={(e)=>{
+		                        	const updatedOptions = [...e.target.options]
+								      .filter(option => option.selected)
+								      .map(x => x.value);
+								    setData(e.target.id,updatedOptions);
+		                       } }
+		                        multiple={true}
+							   value={data.ambience}
 		                    >
 		                    {Ambiences.map((ambience,i)=>(
 		                    	<option value={i} key={i}>{ambience}</option>
@@ -402,10 +419,15 @@ console.log(bistro)
 		                    <InputLabel htmlFor="speciality" value="Specialty Menu" />
 		                    <TextSelect
 		                        id="speciality"
-		                        value={data.speciality}
-		                        onChange={handleChangeData}
-		                        autoComplete="speciality"
-		                        required
+		                        className="multiple"
+		                        onChange={(e)=>{
+		                        	const updatedOptions = [...e.target.options]
+								      .filter(option => option.selected)
+								      .map(x => x.value);
+								    setData(e.target.id,updatedOptions);
+		                       } }
+		                        multiple={true}
+							   value={data.speciality}
 		                    >
 		                    {BistroSpecialities.map((BistroSpeciality,i)=>(
 		                    	<option value={i} key={i}>{BistroSpeciality}</option>
@@ -425,7 +447,7 @@ console.log(bistro)
 								    setData(e.target.id,updatedOptions);
 		                       } }
 		                        multiple={true}
-		                 
+							   value={data.time_occasion}
 		                    >
 		                    {Time_occasions.map((time_occasion,i)=>(
 		                    	<option value={i} key={i}>{time_occasion}</option>
@@ -447,191 +469,96 @@ console.log(bistro)
 		                    </TextSelect>
 		                </div>
 	                </section>
+	               
 	                <section className='section'>
-		                <h2 className='section_title'>Pictures</h2>
-		                <div className='input-area_image thumbnail'>
+		                <h2 className='section_title'>サムネイル</h2>
+		                <div className='input-area_image thumbnail_image'>
 			                <div className='input-area_image-input'>
-			                	{imagePreview["thumbnail"] && 
-			                	<button className='input-area_image-input_close' value="thumbnail" onClick={handleClickDeletePreview}></button>}
-			                    <p className='input-area_image-input_title'>Thumbnail</p>
-			                    <InputLabel htmlFor="thumbnail" className="input-area_image-input_uploader" value={!imagePreview["thumbnail"] && <FaImage />} />
+			                    <p className='input-area_image-input_title'>Thumbnail(Required)</p>
+			                    <InputLabel htmlFor="thumbnail_image" className="input-area_image-input_uploader" value={!previewImages[0]["thumbnail_image"][0]["src"] && <FaImage />} />
 			                    <div className='input-area_text'>
 				                    <TextInputFile 
-				                        id="thumbnail"
+				                        id="thumbnail_image"
 				                        type="file"
-				                        name="thumbnail"
-				                        onChange={handleImageChange}
-				                        autoComplete="thumbnail"
-				                        className="thumbnail"
+				                        name="thumbnail_image"
+				                        onChange={(e, dataname="thumbnail_image",name="thumbnail_image", name_id=0, list_id=0 )=>handleImageChange(e,dataname,name,name_id,list_id)}
+				                        autoComplete="thumbnail_image"
+				                        className="thumbnail_image"
 				                        placeholder=''
 				                    />               
 			                    </div>
-			                    {imagePreview &&
+			                    {previewImages &&
 			                    <div className='input-area_image-input_preview'>
-			                    	<img className='input-area_image-input_preview_img' src={imagePreview["thumbnail"]} alt="" />
+			                    	<img className='input-area_image-input_preview_img' src={previewImages[0]["thumbnail_image"][0]["src"]} alt="" />
 			                    </div>
 			                	}  
-			                    <InputError message={errors.thumbnail} />
+			                    <InputError message={errors.thumbnail_image} />
 			                </div>				
 		                </div>
-
+		                <h2 className='section_title'>メイン写真</h2>
 		                <div className='image-wrap'>
-		                	<div className='input-area_image kv'>
-				                <div className='input-area_image-input'>
-				                	{imagePreview["kv1"] && 
-				                	<button className='input-area_image-input_close kv' value="kv1" onClick={handleClickDeletePreview}></button>}
-				                	<p className='input-area_image-input_title'>Main Picture1</p>
-				                    <InputLabel htmlFor="kv1" className="input-area_image-input_uploader kv" value={!imagePreview["kv1"] && <FaImage />} />
-				                    <div className='input-area_text'>
-					                    <TextInputFile 
-					                        id="kv1"
-					                        type="file"
-					                        name="kv1"
-					                        onChange={handleImageChange}
-					                        autoComplete="thumbnail"
-					                        placeholder=''
-					                        className="kv"
-					                    />               
-				                    </div>
-				                    {imagePreview &&
-				                    <div className='input-area_image-input_preview kv'>
-				                    	<img className='input-area_image-input_preview_img kv' src={imagePreview["kv1"]} alt="" />
-				                    </div>
-				                	} 
-
-				                    <InputError message={errors.kv1} />
+		                	{data.kv_images.map((kv,i)=>(
+		                		<div className='input-area_image kv' key={i}>
+					                <div className='input-area_image-input'>
+					                	
+					                	<p className='input-area_image-input_title'>Main Picture_{i+1}(Required)</p>
+					                    <InputLabel htmlFor={`kv${i}`} className="input-area_image-input_uploader kv" value={!previewImages[1]["kv_images"][i]["src"] && <FaImage />} />
+					                    <div className='input-area_text'>
+						                    <TextInputFile 
+						                        id={`kv${i}`} 
+						                        type="file"
+						                        onChange={(e, dataname="kv_images",name=`kv${i}`, name_id=1, list_id=i )=>handleImageChange(e,dataname,name,name_id,list_id)}
+						                        autoComplete={`kv${i}`} 
+						                    />               
+					                    </div>
+					                    {previewImages &&
+					                    <div className='input-area_image-input_preview kv'>
+					                    	<img className='input-area_image-input_preview_img kv' src={previewImages[1]["kv_images"][i]["src"]} alt="" />
+					                    </div>
+					                	} 
+					                    <InputError message={errors.kv1} />
+					                </div>
 				                </div>
-			                </div>
-			                <div className='input-area_image kv'>
-				                <div className='input-area_image-input'>
-				                	{imagePreview["kv2"] && 
-				                	<button className='input-area_image-input_close kv' value="kv2" onClick={handleClickDeletePreview}></button>}
-				                    <p className='input-area_image-input_title'>Main Picture2</p>
-				                    <InputLabel htmlFor="kv2" className="input-area_image-input_uploader kv" value={!imagePreview["kv2"] && <FaImage />} />
-				                    <div className='input-area_text'>
-					                    <TextInputFile 
-					                        id="kv2"
-					                        type="file"
-					                        name="kv2"
-					                        onChange={handleImageChange}
-					                        autoComplete="thumbnail"
-					                        placeholder=''
-					                        className="kv"
-					                    />               
-				                    </div>
-				                    {imagePreview &&
-				                    <div className='input-area_image-input_preview kv'>
-				                    	<img className='input-area_image-input_preview_img kv' src={imagePreview["kv2"]} alt="" />
-				                    </div>
-				                	} 
-
-				                    <InputError message={errors.kv2} />
-				                </div>
-			                </div>
-			                <div className='input-area_image kv'>
-				                <div className='input-area_image-input'>
-				                	{imagePreview["kv3"] && 
-				                	<button className='input-area_image-input_close kv' value="kv3" onClick={handleClickDeletePreview}></button>}
-				                    <p className='input-area_image-input_title'>Main Picture3</p>
-				                    <InputLabel htmlFor="kv3" className="input-area_image-input_uploader kv" value={!imagePreview["kv3"] && <FaImage /> } />
-				                    <div className='input-area_text'>
-					                    <TextInputFile 
-					                        id="kv3"
-					                        type="file"
-					                        name="kv3"
-					                        onChange={handleImageChange}
-					                        autoComplete="thumbnail"
-					                        placeholder=''
-					                        className="kv"
-					                    />               
-				                    </div>
-				                    {imagePreview &&
-				                    <div className='input-area_image-input_preview kv'>
-				                    	<img className='input-area_image-input_preview_img kv' src={imagePreview["kv3"]} alt="" />
-				                    </div>
-				                	} 
-
-				                    <InputError message={errors.kv3} />
-				                </div>
-			                </div>
-			                <div className='input-area_image kv'>
-				                <div className='input-area_image-input'>
-				                	{imagePreview["kv4"] && 
-				                	<button className='input-area_image-input_close kv' value="kv4" onClick={handleClickDeletePreview}></button>}
-				                    <p className='input-area_image-input_title'>Main Picture4</p>
-				                    <InputLabel htmlFor="kv4" className="input-area_image-input_uploader kv" value={!imagePreview["kv4"] && <FaImage /> } />
-				                    <div className='input-area_text'>
-					                    <TextInputFile 
-					                        id="kv4"
-					                        type="file"
-					                        name="kv4"
-					                        onChange={handleImageChange}
-					                        autoComplete="thumbnail"
-					                        placeholder=''
-					                        className="kv"
-					                    />               
-				                    </div>
-				                    {imagePreview &&
-				                    <div className='input-area_image-input_preview kv'>
-				                    	<img className='input-area_image-input_preview_img kv' src={imagePreview["kv4"]} alt="" />
-				                    </div>
-				                	} 
-
-				                    <InputError message={errors.kv4} />
-				                </div>
-			                </div>
-			                <div className='input-area_image kv'>
-				                <div className='input-area_image-input'>
-				                	{imagePreview["kv5"] && 
-				                	<button className='input-area_image-input_close kv' value="kv5" onClick={handleClickDeletePreview}></button>}
-				                    <p className='input-area_image-input_title'>Main Picture5</p>
-				                    <InputLabel htmlFor="kv5" className="input-area_image-input_uploader kv" value={!imagePreview["kv5"] && <FaImage /> } />
-				                    <div className='input-area_text'>
-					                    <TextInputFile 
-					                        id="kv5"
-					                        type="file"
-					                        name="kv5"
-					                        onChange={handleImageChange}
-					                        autoComplete="thumbnail"
-					                        placeholder=''
-					                        className="kv"
-					                    />               
-				                    </div>
-				                    {imagePreview &&
-				                    <div className='input-area_image-input_preview kv'>
-				                    	<img className='input-area_image-input_preview_img kv' src={imagePreview["kv5"]} alt="" />
-				                    </div>
-				                	} 
-
-				                    <InputError message={errors.kv5} />
-				                </div>
-			                </div>            
+		                		))}
+          
 		                </div>
-	
-			            <h2 className='section_title'>Points</h2>
-			              	<div className='image-wrap'>
-			              	{(data.points) && 
-				                <PointsUploader data={data} imagePreview={imagePreview} 
-				                	    handleImageChange={handleImageChange} errors={errors} 
-				                	    handleChangeRemarks={handleChangeRemarks} handleClickDeletePreview={handleClickDeletePreview}
-				               	/>
-				             }
-				            <button onClick={handleClickAddUploader} className='add-uploader' id="add-point-uploader">
+		                <h2 className='section_title'>店内</h2>
+		              	<div className='image-wrap'>
+		              	{(data.interior_slides) && 
+			                <ImageUploader category="interior_slides" data={data} previewImages={previewImages} 
+			                	    handleImageChange={handleImageChange} errors={errors} category_id={2}
+			                	    handleChangeRemarks={handleChangeRemarks} handleClickDeleteUploader={handleClickDeleteUploader}
+			               	/>
+			             }
+				            <button onClick={(e,dataname="interior_slides",name_id=2)=>handleClickAddUploader(e,dataname, name_id)} className='add-uploader'>
 				               <CiCirclePlus />
 				            </button>
 			            </div>
-			            <h2 className='section_title'>Menus</h2>
+			            <h2 className='section_title'>料理</h2>
 			            <div className='image-wrap'>
-			              	{(data.menu_images) && 
-				                <MenuUploader data={data} imagePreview={imagePreview} 
-				                	    handleImageChange={handleImageChange} errors={errors} 
-				                	    handleChangeRemarks={handleChangeRemarks} handleClickDeletePreview={handleClickDeletePreview}
-				               	/>
-				             }
-				            <button onClick={handleClickAddUploader} className='add-uploader' id="add-menu-uploader">
+		              	{(data.food_slides) && 
+			                <ImageUploader category="food_slides" data={data} previewImages={previewImages} 
+			                	    handleImageChange={handleImageChange} errors={errors} category_id={3}
+			                	    handleChangeRemarks={handleChangeRemarks} handleClickDeleteUploader={handleClickDeleteUploader}
+			               	/>
+			             }
+				            <button onClick={(e,dataname="food_slides",name_id=3)=>handleClickAddUploader(e,dataname, name_id)} className='add-uploader'>
 				               <CiCirclePlus />
 				            </button>
 			            </div>
+			            <h2 className='section_title'>メニュー</h2>
+			            <div className='image-wrap'>
+		              	{(data.menu_images) && 
+			                <ImageUploader category="menu_images" data={data} previewImages={previewImages} 
+			                	    handleImageChange={handleImageChange} errors={errors} portrait={true} category_id={4}
+			                	    handleChangeRemarks={handleChangeRemarks} handleClickDeleteUploader={handleClickDeleteUploader}
+			               	/>
+			             }
+				            <button onClick={(e,dataname="menu_images",name_id=4)=>handleClickAddUploader(e,dataname, name_id)} className='add-uploader'>
+				               <CiCirclePlus />
+				            </button>
+			            </div>
+			            
 	                </section>
 	                <section className='section'>
 		                <h2 className='section_title'>Ohters</h2>
@@ -644,7 +571,6 @@ console.log(bistro)
 		                        value={data.seats_number}
 		                        onChange={handleChangeData}
 		                        autoComplete="seats_number"
-		                        placeholder=''
 		                    />
 		                    <InputError message={errors.seats_number} />
 		                </div>
@@ -657,7 +583,6 @@ console.log(bistro)
 		                        value={data.min_price}
 		                        onChange={handleChangeData}
 		                        autoComplete="min_price"
-		                        placeholder=''
 		                    />
 		                    <InputError message={errors.min_price} />
 		                </div>
@@ -670,7 +595,6 @@ console.log(bistro)
 		                        value={data.max_price}
 		                        onChange={handleChangeData}
 		                        autoComplete="max_price"
-		                        placeholder=''
 		                    />
 		                    <InputError message={errors.max_price} />
 		                </div>
@@ -719,7 +643,6 @@ console.log(bistro)
 		                        value={data.keywords}
 		                        onChange={handleChangeData}
 		                        autoComplete="keywords"
-		                        placeholder=''
 		                    />
 		                    <InputError message={errors.keywords} />
 		                </div>
@@ -735,84 +658,57 @@ console.log(bistro)
 }
 
 
-const PointsUploader = ({data,imagePreview,handleImageChange,errors, handleChangeRemarks,handleClickDeletePreview}) =>{
+const ImageUploader = ({category,data,previewImages,handleImageChange,errors,category_id, handleChangeRemarks,handleClickDeleteUploader, portrait}) =>{
+
+
 return(
-	data.points.map((point,i)=>(
-		<div className='input-area_image point' id={`point${i+1}`}>
+	data[category].map((e,i)=>(
+		<div className={`input-area_image interior_slides ${portrait && "portrait"}`} key={i}>
 	        <div className='input-area_image-input'>
-	        	{imagePreview[`point${i+1}_picture`] && 
-	        	<button className='input-area_image-input_close' value={`point${i+1}_picture`} onClick={handleClickDeletePreview}></button>}
-	            <p className='input-area_image-input_title'>{`Point${i+1}`}</p>
-	            <InputLabel htmlFor={`point${i+1}_picture`} className="input-area_image-input_uploader" value={!imagePreview[`point${i+1}_picture`] && <FaImage />} />
+	        	{previewImages[category_id][category][i] && 
+	        	<button className='input-area_image-input_close' 
+	        			onClick={(e,dataname=category, name=`${category}${i}`, name_id=category_id, list_id=i)=>handleClickDeleteUploader(e,dataname,name,name_id,list_id)}>
+	        			
+	        	</button>}
+	            <p className='input-area_image-input_title'>{`${category}_image_${i+1}`}</p>
+	            <InputLabel htmlFor={`${category+i}_imagesrc`} className={`input-area_image-input_uploader ${portrait && "portrait"}`} value={!previewImages[category_id][category][i]["src"] && <FaImage />} />
 	            <div className='input-area_text'>
 	                <TextInputFile 
-	                    id={`point${i+1}_picture`}
+	                    id={`${category+i}_imagesrc`}
 	                    type="file"
-	                    name={`point${i+1}_picture`}
-	                    onChange={handleImageChange}
-	                    autoComplete={`point${i+1}_picture`}
-	                    placeholder=''
+	                    onChange={(e, dataname=category, name=`${category}${i}`, name_id=category_id, list_id=i )=>handleImageChange(e,dataname,name,name_id,list_id)}
+	                    autoComplete={`${category+i}_imagesrc`}
 	                 
 	                />               
 	            </div>
-	            {imagePreview &&
+	            {previewImages &&
 	            <div className='input-area_image-input_preview'>
-	            	<img className='input-area_image-input_preview_img' src={imagePreview[`point${i+1}_picture`]} alt="" />
+	            	<img className={`input-area_image-input_preview_img ${portrait && "portrait"}`} src={previewImages[category_id][category][i]["src"] } alt="" />
 	            </div>
 	        	} 
 	        </div>
-	        <div className='input-area_image-remarks'>
-	            <Textarea
-	                id={`point${i+1}_remarks`}
-	                name={`point${i+1}_remarks`}
-	                value={data.points[i]["remarks"]}
-	                onChange={handleChangeRemarks}
-	                autoComplete={`point${i+1}_remarks`}
-	                type="text"
-	                placeholder="remarks"
-	            >
-	            </Textarea>
-	        </div>
-	        	<InputError message={errors.point_picture} />
-				<InputError message={errors.point_remarks} />
+	        {category !== "menu_images" &&
+		        <div className='input-area_image-remarks'>
+		            <Textarea
+		                id={`${category+i}_remarks`}
+		                value={data[category][i]["remarks"]}
+		                onChange={(e, dataname=category, name=`${category}${i}`, name_id=category_id, list_id=i )=>handleChangeRemarks(e,dataname,name,name_id,list_id)}
+		                autoComplete={`${category+i}_remarks`}
+		                type="text"
+		                placeholder="remarks"
+		            >
+		            </Textarea>
+		        </div>
+	    	}
+	        	<InputError message={errors.interiors_remarks} />
+				<InputError message={errors.interiors_remarks} />
 	    </div>
 
 		))
 	)
 }
 
-const MenuUploader = ({data,imagePreview,handleImageChange,errors, handleChangeRemarks,handleClickDeletePreview}) =>{
-return(
-	data.menu_images.map((menu_image,i)=>(
-		<div className='input-area_image menu' id={`menu_image${i+1}`} >
-	        <div className='input-area_image-input'>
-	        	{imagePreview[`menu_image${i+1}_picture`] && 
-	        	<button className='input-area_image-input_close' value={`menu_image${i+1}_picture`} onClick={handleClickDeletePreview}></button>}
-	            <p className='input-area_image-input_title'>{`menu${i+1}_picture`}</p>
-	            <InputLabel htmlFor={`menu_image${i+1}_picture`} className="input-area_image-input_uploader" value={!imagePreview[`menu_image${i+1}_picture`] && <FaImage />} />
-	            <div className='input-area_text'>
-	                <TextInputFile 
-	                    id={`menu_image${i+1}_picture`}
-	                    type="file"
-	                    name={`menu_image${i+1}_picture`}
-	                    onChange={handleImageChange}
-	                    autoComplete={`menu_image${i+1}_picture`}
-	                    placeholder=''
-	                 
-	                />               
-	            </div>
-	            {imagePreview &&
-	            <div className='input-area_image-input_preview'>
-	            	<img className='input-area_image-input_preview_img' src={imagePreview[`menu_image${i+1}_picture`]} alt="" />
-	            </div>
-	        	} 
-	        </div>
-	        	<InputError message={errors.menu_image} />
-	    </div>
 
-		))
-	)
-}
 
 
 

@@ -1,13 +1,18 @@
 
+const LocalityTypes = ["Local", "Expat", "Traveller"];
+
 const BistroGenres =["Rwandan","International", "African", "French", "Thai", "American", "British", "Italian", "Japanese", "Mexican", "Chinese", "Korean", "Japanese", "Bar-B-Q","Indian"]
 
-const BistroStyles = ["Fast Food", "Dining", "Cafés and Bakeries", "Bars and Pubs"];
-const BistroSpecialities = ["Vegan", "Seafood", "Steakhouse", "Desserts", "Coffee", "Healthy Food", "Buffet", "Drinks"]
+const BistroStyles = [ "Dining", "Cafés and Bakeries", "Buffet", "Bars and Pubs"];
 const Occasions = ["Single", "Couple","Family", "Friends Gathering ", "Business"];
 const Ambiences = ["Casual","Formal", "Relaxed", "Romatice", "Cozy", "Outdoor"];
+const BistroSpecialities = ["All", "Fast Food","Vegan", "Seafood", "Steak", "Desserts", "Coffee", "Healthy Food", "Drinks", "Alcohol"]
+
+
 const Time_occasions = ["Breakfast", "Brunch", "Dinner", "Late-Night Eats" ];
 const Dietary_restrictions = ["Not Available","Religious & Ethical Choices", "Allergies & Intolerances", ];
-const Reservation = ["Reservation Required","Walk-ins Welcome", "Advance Reservation Recommended", ];
+const Reservation = ["Walk-ins Welcome", "Reservation Required" ,"Advance Reservation Recommended", ];
+
 
 const Payment_options = [
 	{id:0, method:"Cash", checked:false},
@@ -22,4 +27,4 @@ const Payment_options = [
 ]
 
 
-export {BistroGenres, BistroStyles, BistroSpecialities, Occasions, Time_occasions,Dietary_restrictions,Payment_options,Reservation,Ambiences};
+export {BistroGenres, BistroStyles, BistroSpecialities, Occasions, Time_occasions,Dietary_restrictions,Payment_options,Reservation,Ambiences,LocalityTypes};

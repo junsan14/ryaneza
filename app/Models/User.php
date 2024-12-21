@@ -20,13 +20,15 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array<int, string>
      */
     protected $fillable = [
+        'icon',
         'username',
         'email',
         'password',
         'country',
-        'sex',
+        'gender',
         'birth_year',
-        'type'
+        'locality_type',
+        'wishlist'
     ];
 
     /**
@@ -38,6 +40,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'remember_token',
         'amind',
+        
     ];
 
     /**
@@ -50,6 +53,8 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'wishlist'=>'array'
         ];
     }
+
 }

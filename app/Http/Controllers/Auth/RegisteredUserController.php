@@ -20,7 +20,7 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Home');
+        return Inertia::render('Home',['state' => 'signup']);
         
     }
 
@@ -34,7 +34,7 @@ class RegisteredUserController extends Controller
         //dd($request);
 
         $request->validate([
-            'username' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:'.User::class,
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
@@ -49,7 +49,7 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
-
-        return redirect(route('home', absolute: false));
+        return redirect('/')->with(['message'=>'A verification mail sent']);
+        //return redirect(route('home', absolute: false));
     }
 }

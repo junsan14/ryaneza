@@ -43,7 +43,7 @@ class PasswordResetLinkController extends Controller
         if ($status == Password::RESET_LINK_SENT) {
 
             //return back()->with('status', __($status));
-            return redirect('/')->with(['message'=>"A link to reset your password has been sent to $request->email."]);
+            return redirect('/')->with(['message'=>"A link to reset your password  sent to $request->email."]);
         }
 
         throw ValidationException::withMessages([

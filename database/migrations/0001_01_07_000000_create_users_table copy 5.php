@@ -29,17 +29,20 @@ return new class extends Migration
             $table->id()->primary();
             $table->boolean('admin')->default(0);
             $table->string('username')->unique();
+            $table->text('intro')->nullable();
             $table->string('password');
             $table->string('email')->unique();
+            $table->string('icon')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('country')->nullable();
-            $table->string('sex')->nullable();
+            $table->string('gender')->nullable();
             $table->year('birth_year')->nullable();
-            $table->string('type')->nullable();
+            $table->string('locality_type')->nullable();
+            $table->json('wishlist')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
-         /*
+         
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
@@ -54,7 +57,7 @@ return new class extends Migration
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
-        */
+        
     }
 
     /**

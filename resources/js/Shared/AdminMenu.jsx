@@ -9,7 +9,7 @@ export default function AdminMenu (){
                <Link href={route('bistro.create')}>Create Bistro </Link>
             </li>
             <li className="drop-down_items_item">
-               <Link href={route('bistro.create')}>Edit User </Link>
+               <Link href={route('users.edit.index')}>Edit User </Link>
             </li>
         </>
 

@@ -4,9 +4,12 @@ import InputLabel from '@/Components/InputLabel';
 
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { PrimaryButton } from '@/Components/Button';
+import { useContext } from 'react';
+import { ShowModal } from '@/Layouts/Layout';
 
-export default function ForgotPassword({ status,handleClickHideModal }) {
+export default function ForgotPassword() {
     const {errors} = usePage().props;
+    const {handleClickHideModal} = useContext(ShowModal);
     const { data, setData, post, processing } = useForm({
         email: '',
     });

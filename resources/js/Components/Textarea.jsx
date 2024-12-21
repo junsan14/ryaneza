@@ -25,8 +25,9 @@ export default forwardRef(function Textarea(
                 className
             }
             ref={localRef}
+            defaultValue={content}
         >
-        {content}
+        
         </textarea>
     );
 });

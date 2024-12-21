@@ -17,7 +17,7 @@ class VerifyEmailController extends Controller
     {
         //dd($request->user()->markEmailAsVerified());
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect('/')->with(['message'=>'Your email has been already verified']);
+            return redirect('/')->with(['message'=>'Your email already verified']);
         }
 
         if ($request->user()->markEmailAsVerified()) {
@@ -25,7 +25,7 @@ class VerifyEmailController extends Controller
         }
 
         //return Inertia::render('Mypage/MypageIndex', ['message'=>'Your email is verified']);
-        return redirect('/')->with(['message'=>'Your email is now verified']);
+        return redirect('/')->with(['message'=>'Your email verified']);
         //redirect('/')->with(['message'=>'Your email is verified']);;
     }
 }

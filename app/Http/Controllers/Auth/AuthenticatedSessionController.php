@@ -20,7 +20,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Home', ['status' => 'login']);
+        return Inertia::render('Home', ['state' => 'login']);
     }
 
     /**
@@ -34,31 +34,13 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('mypage', absolute: false));
+            //return redirect()->intended(route('mypage', absolute: false))->with(['message'=>'Welcome']);
+            return redirect('/')->with(['message'=>'Welcome']);
         }
         if (Gate::allows('admin', Auth::user())) {
             return redirect()->intended(route('admin.mypage', absolute: false));
         }
-        return back()->with(['message'=>'Logged in']);
-        /*
-       
-       $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
- 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
- 
-            return redirect()->intended('dashboard');
-        }
-    
-        return back()->withErrors([
-            'email' => 'だめ',
-        ])->withInput();
-    
-       return redirect('/')->with('status',$request->email);
-        */
+        return redirect('/')->with(['message'=>'Welcome']);
     }
 
     /**

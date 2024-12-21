@@ -21,12 +21,13 @@ class Bistro extends Model
             'style',
             'speciality',
             'occasion',
-            'abmience',
+            'ambience',
             'time_occasion',
             'dietary_restriction',
-            'thumbnail',
-            'kvs_images',
-            'points',
+            'thumbnail_image',
+            'kv_images',
+            'interior_slides',
+            'food_slides',
             'menu_images',
             'seats_number',
             'min_price',
@@ -38,10 +39,16 @@ class Bistro extends Model
     protected function casts(): array
     {
         return [
+            'ambience' =>'array',
+            'speciality' =>'array',
+            'occasion' =>'array',
+            'google_map' => 'array',
+            'thumbnail_image' => 'array',
             'menu_images' => 'array',
             'time_occasion' => 'array',
-            'kvs_images' => 'array',
-            'points' => 'array',
+            'kv_images' => 'array',
+            'interior_slides' => 'array',
+            'food_slides' => 'array',
             'payment_options' => 'array',
         ];
     }

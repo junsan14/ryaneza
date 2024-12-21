@@ -5,9 +5,21 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
     plugins: [
         laravel({
-            input: 'resources/js/app.jsx',
+            input: [
+                'resources/js/app.jsx',
+         
+            ],
             refresh: true,
         }),
         react(),
     ],
+    /*
+    build:{
+        rollupOptions:{
+            output:{
+                chunkFileNames:'js/[name]-[hash.js'
+            }
+        }
+    }
+        */
 });
